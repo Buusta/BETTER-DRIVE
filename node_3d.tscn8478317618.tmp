@@ -1,0 +1,36 @@
+[gd_scene load_steps=6 format=3 uid="uid://dcuef1fiebl1h"]
+
+[ext_resource type="Script" uid="uid://cqgfeibnotrd5" path="res://TerrainGenerator.gd" id="1_a202f"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_a202f"]
+sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
+ground_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
+
+[sub_resource type="Sky" id="Sky_noarx"]
+sky_material = SubResource("ProceduralSkyMaterial_a202f")
+
+[sub_resource type="Environment" id="Environment_a0tk4"]
+background_mode = 2
+sky = SubResource("Sky_noarx")
+tonemap_mode = 2
+glow_enabled = true
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_noarx"]
+
+[node name="Node3D" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_a0tk4")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.8660254, -0.43301278, 0.24999999, -0.3669776, 0.8900653, 0.27039084, -0.33959898, 0.14242092, -0.92972517, 0, 0, 0)
+shadow_enabled = true
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("ArrayMesh_noarx")
+script = ExtResource("1_a202f")
+resolution = 50
+height_scale = 5.0
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(0.05087695, 0.3389844, -0.93941534, -0.018331878, 0.940792, 0.33848834, 0.9985367, -7.461499e-09, 0.054078847, -5.5817018, 12.0725975, 11.8353405)
