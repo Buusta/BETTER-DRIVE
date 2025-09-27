@@ -2,6 +2,8 @@ extends RigidBody3D
 
 @export var wheels: Array[RaycastWheel]
 @export var accel := 600.0
+@export var tire_turn_speed := 2.0
+@export var tire_max_turn_degrees := 25.0
 
 var started := false
 var motor_input := 0
@@ -20,7 +22,18 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed('spawn_ball'):
 		start()
 
-
+func _basic_steering_rotation(delta: float):
+	var turn_input := Input.get_axis('move_right', 'move_left') * tire_turn_speed
+	
+	if turn_input:
+		$WheelRay_FL.rotation.y = clampf($WheelRay_FL.rotation.y + turn_input * delta,
+			deg_to_rad(-tire_max_turn_degrees), deg_to_rad(tire_max_turn_degrees))
+		$WheelRay_FR.rotation.y = clampf($WheelRay_FR.rotation.y + turn_input * delta,
+			deg_to_rad(-tire_max_turn_degrees), deg_to_rad(tire_max_turn_degrees))
+	
+	else:
+		$WheelRay_FL.rotation.y = move_toward($WheelRay_FL.rotation.y, 0, tire_turn_speed * delta)
+		$WheelRay_FR.rotation.y = move_toward($WheelRay_FR.rotation.y, 0, tire_turn_speed * delta)
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
@@ -34,6 +47,7 @@ func start():
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _physics_process(delta: float) -> void:
+	_basic_steering_rotation(delta)
 	if started:
 		for wheel in wheels:
 			wheel.force_raycast_update()
@@ -42,9 +56,27 @@ func _physics_process(delta: float) -> void:
 			
 			var accel_force = wheel_acceleration(wheel)
 			apply_force(accel_force[0], accel_force[1])
+			
+			var steer_force = _wheel_traction(wheel)
+			apply_force(steer_force[0], steer_force[1])
 
 func _get_point_velocity(point: Vector3) -> Vector3:
 	return linear_velocity + angular_velocity.cross(point - global_position)
+
+func _wheel_traction(ray: RaycastWheel):
+	if not ray.is_colliding(): return [Vector3(0.0, 0.0, 0.0), Vector3(0.0, 0.0, 0.0)]
+	
+	var steer_side_dir := ray.global_basis.x
+	var tire_vel := _get_point_velocity(ray.wheel.global_position)
+	var steering_x_vel := steer_side_dir.dot(tire_vel)
+	var x_traction := 0.6
+	
+	var desired_accel := (steering_x_vel * x_traction) / get_physics_process_delta_time()
+	var x_force := -steer_side_dir * desired_accel * (mass/4.0)
+	
+	var force_pos := ray.wheel.global_position - global_position
+	
+	return [x_force, force_pos]
 
 func wheel_acceleration(ray: RaycastWheel):
 	if ray.is_colliding() and ray.is_motor and not motor_input == 0:

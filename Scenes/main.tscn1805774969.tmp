@@ -30,7 +30,8 @@ shadow_enabled = true
 [node name="Terrain_Spawner" type="Node3D" parent="." node_paths=PackedStringArray("player")]
 script = ExtResource("3_h2yge")
 player = NodePath("../Car/Camera3D")
-chunk_render_distance = 8
+chunk_size = 64
+chunk_render_distance = 16
 octaves = 8
 height_scale = 250.0
 frequency = 1.0
