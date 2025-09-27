@@ -32,5 +32,6 @@ script = ExtResource("2_0xm2m")
 [node name="Terrain_Spawner" type="Node3D" parent="." node_paths=PackedStringArray("player")]
 script = ExtResource("3_h2yge")
 player = NodePath("../Camera3D")
-chunk_render_distance = 10
-frequency = 0.003
+chunk_size = 64
+chunk_render_distance = 32
+frequency = 0.001

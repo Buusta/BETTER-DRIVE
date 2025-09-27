@@ -48,7 +48,7 @@ func _process(delta):
 	if Input.is_action_pressed("move_down"):
 		dir -= Vector3.UP
 	if Input.is_action_pressed("speedup"):
-		move_speed = speed * 5
+		move_speed = speed * 50
 	else:
 		move_speed = speed 
 
