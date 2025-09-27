@@ -1,7 +1,7 @@
 [gd_scene load_steps=6 format=3 uid="uid://dcuef1fiebl1h"]
 
-[ext_resource type="Script" uid="uid://b37ke4tiho22m" path="res://FreeCam.gd" id="2_0xm2m"]
-[ext_resource type="Script" uid="uid://cbbucwmb1kua1" path="res://terrain_spawner.gd" id="3_h2yge"]
+[ext_resource type="PackedScene" uid="uid://gl66cbv21e5f" path="res://Scenes/Car.tscn" id="2_bo1nx"]
+[ext_resource type="Script" uid="uid://cbbucwmb1kua1" path="res://Scripts/terrain_spawner.gd" id="3_h2yge"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_a202f"]
 sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
@@ -15,6 +15,7 @@ background_mode = 2
 sky = SubResource("Sky_noarx")
 tonemap_mode = 2
 glow_enabled = true
+fog_sun_scatter = 0.08
 
 [node name="Root" type="Node3D"]
 
@@ -25,13 +26,20 @@ environment = SubResource("Environment_a0tk4")
 transform = Transform3D(-0.8660254, -0.43301278, 0.24999999, -0.3669776, 0.8900653, 0.27039084, -0.33959898, 0.14242092, -0.92972517, 0, 0, 0)
 shadow_enabled = true
 
-[node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 15.270683, 0)
-script = ExtResource("2_0xm2m")
-
 [node name="Terrain_Spawner" type="Node3D" parent="." node_paths=PackedStringArray("player")]
 script = ExtResource("3_h2yge")
-player = NodePath("../Camera3D")
+player = NodePath("../Car/Camera3D")
 chunk_size = 64
-chunk_render_distance = 32
-frequency = 0.001
+chunk_render_distance = 5
+height_scale = 5.0
+frequency = 0.01
+
+[node name="Car" parent="." instance=ExtResource("2_bo1nx")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.3788195, 0)
+axis_lock_angular_y = true
+freeze = true
+accel = 2000.0
+
+[node name="Camera3D" type="Camera3D" parent="Car"]
+transform = Transform3D(-1, 3.416271e-08, -8.043936e-08, 2.270919e-09, 0.9302767, 0.3668584, 8.7363745e-08, 0.3668584, -0.9302767, 5.9604645e-08, 3.11, -4.9800034)
+fov = 58.62595

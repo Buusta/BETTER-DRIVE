@@ -23,10 +23,9 @@ func _ready() -> void:
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
-	
 	# Add new chunks to new_chunk list if the player has moved.
-	var px = player.position.x
-	var pz = player.position.z
+	var px = player.global_position.x
+	var pz = player.global_position.z
 	if prev_player_chunk != Vector2i(floor(px / chunk_size), floor(pz / chunk_size)): # if player not in player chunk
 		prev_player_chunk = Vector2i(floor(px / chunk_size), floor(pz / chunk_size)) 
 		add_new_chunks(Vector2(px, pz), chunk_size, chunk_render_distance)
@@ -80,22 +79,17 @@ func _thread_spawn_chunk(chunk_pos):
 	var mesh = st.commit()
 	var mesh_inst = MeshInstance3D.new()
 	mesh_inst.mesh = mesh
+	mesh_inst.create_trimesh_collision()
 	self.add_child.call_deferred(mesh_inst)
 
 # Add new chunks with the paramaters
 func add_new_chunks(pos: Vector2, size: int, render_distance: int):
-	var start_time = Time.get_ticks_msec()
-	
 	var player_chunk_pos = Vector2i(floor(pos.x / size), floor(pos.y / size))
 	for x in range(player_chunk_pos.x - render_distance, player_chunk_pos.x + render_distance + 1):
 		for z in range(player_chunk_pos.y - render_distance, player_chunk_pos.y + render_distance + 1):
 			var chunk_xz = Vector2i(x, z)  # Use Vector2i for exact integer keys
 			if not chunks.has(chunk_xz) and not new_chunks.has(chunk_xz):
 				new_chunks[chunk_xz] = true
-	
-	var end_time = Time.get_ticks_msec()
-	
-	print(end_time-start_time)
 
 func frac(x: float) -> float:
 	return x - floor(x)
