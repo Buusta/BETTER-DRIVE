@@ -1,44 +1,43 @@
 extends Node3D
 
-@export var player: Node3D
+@export var player: Node3D # can be anything but it needs a position so chunks can generate around it
 
-@export var chunk_size := 32
-@export var chunk_resolution := 1.0
-@export var chunk_render_distance := 1
+@export var resolution := 32 # the base resolutib of the chunk
+@export var resolution_scale := 1 # how many times the chunk will be divided
+@export var render_distance := 1 # how many chunks will be loaded in
 
-@export var octaves := 4
-@export var height_scale := 25.0
-@export var frequency := 0.5
-@export var frequency_scale_div := 250.0
-@export var terrain_seed := 69420
-@export var chunks_per_frame := 1
+@export var octaves := 4 # how detailed the noise is
+@export var height_scale := 25.0 # how much the terrain will be scaled along the y axis
+@export var frequency := 0.5 # how big the noise is
+@export var frequency_scale := 250.0 # scales the frequency (divides)
+@export var chunks_per_frame := 1 # how many chunk meshes can be generated and added as child per frame. helps with performance
 
-@export var terrain_shader: VisualShader
+@export var terrain_shader: VisualShader # terrain shader
 
-var prev_player_chunk: Vector2i
+var terrain_seed = randi() # the random seed for the terrain
 
-var chunks := {}
-var new_chunks := {}
-var generating_chunks := {}
-var pending_chunks = []
+var prev_player_chunk: Vector2i # the chunk the player was in last frame
 
-var task_ids = []
+var chunks := {} # key = Vector2i position (chunk_pos), vals = MeshInstance3D, Distance
+var new_chunks := {} # key = Vector2i position (chunk_pos), vals = Distance
+var generating_chunks := {} # key = Vector2i position (chunk_pos), vals = true
+var pending_chunks = [] # vals = mesh_arrays, collision, Vector2i position (chunk_pos), distance
 
+var task_ids = [] # all WorkerThreadPool tasks that need to be completed.
 
 func _ready() -> void:
-	terrain_seed = randi()
-	_add_new_chunks(Vector2(player.position.x, player.position.z), chunk_size, chunk_render_distance)
+	_add_new_chunks(Vector2(player.position.x, player.position.z), resolution, render_distance)
 
 func _process(_delta: float) -> void:
-	
-	# Add new chunks to new_chunk list if the player has moved.
 	var px = player.global_position.x
 	var pz = player.global_position.z
 
-	if prev_player_chunk != Vector2i(floor(px / chunk_size / chunk_resolution), floor(pz / chunk_size / chunk_resolution)): # if player not in player chunk
-		prev_player_chunk = Vector2i(floor(px / chunk_size), floor(pz / chunk_size))
-		_add_new_chunks(Vector2(px, pz), chunk_size, chunk_render_distance)
+	# add new chunks to new_chunk list if the player has moved.
+	if prev_player_chunk != Vector2i(floor(px / resolution / resolution_scale), floor(pz / resolution / resolution_scale)): # if player not in player chunk
+		prev_player_chunk = Vector2i(floor(px / resolution), floor(pz / resolution))
+		_add_new_chunks(Vector2(px, pz), resolution, render_distance)
 
+	# give workerThreadPool task if there are new chunks
 	if len(new_chunks) > 0:
 		for c in new_chunks.keys():
 			var task_id = WorkerThreadPool.add_task(Callable(self, "_thread_spawn_chunk").bind(c, new_chunks[c]), false, "Generating")
@@ -46,42 +45,53 @@ func _process(_delta: float) -> void:
 			generating_chunks[c] = true
 		new_chunks.clear()
 
+	# if tasks are complete, remove them from the task list so they end
 	if task_ids.size() > 0:
 		for i in range(task_ids.size() - 1, -1, -1):
 			var id = task_ids[i]
 			if WorkerThreadPool.is_task_completed(id):
 				task_ids.remove_at(i)
 
+	# if there are chunks that are ready to be added, do it per "chunks_per_frame" amount of times
 	if pending_chunks.size() > 0:
-		for i in range(min(chunks_per_frame, pending_chunks.size())):
-			var chunk = pending_chunks.pop_front()
-			var static_body = StaticBody3D.new()
+		for i in range(min(chunks_per_frame, pending_chunks.size())): # takes the min between the len and the max amount of "chunks_per_frame"
+			var chunk = pending_chunks.pop_front() # vals = mesh_arrays, collision, Vector2i position (chunk_pos), distance
+			var mesh_array = chunk[0]
+			var collision = chunk[1]
+			var chunk_pos = chunk[2]
+			var distance = chunk[3]
+
 			var mesh = ArrayMesh.new()
 			var mesh_inst = MeshInstance3D.new()
-			mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, chunk[0])
+			mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, mesh_array)
 			mesh_inst.mesh = mesh
+
 			var mat = ShaderMaterial.new()
 			mat.shader = terrain_shader
 			mesh_inst.material_override = mat
-			static_body.add_child(chunk[1])
+
+			var static_body = StaticBody3D.new()
+			static_body.add_child(collision)
 			mesh_inst.add_child(static_body)
-			var offset = Vector3(chunk[2].x * chunk_size, 0.0, chunk[2].y * chunk_size)
+
+			var offset = Vector3(chunk_pos.x * resolution, 0.0, chunk_pos.y * resolution)
 			mesh_inst.transform.origin = offset
 			add_child(mesh_inst)
-			chunks[chunk[2]] = {
+
+			chunks[chunk_pos] = {
 				"mesh": mesh_inst,
-				"distance": chunk[3]
+				"distance": distance
 				}
 
 func _thread_spawn_chunk(chunk_pos, distance):
-	var chunk_x_offset = chunk_pos.x * chunk_size / chunk_resolution
-	var chunk_z_offset = chunk_pos.y * chunk_size / chunk_resolution
+	var chunk_x_offset = chunk_pos.x * resolution / resolution_scale
+	var chunk_z_offset = chunk_pos.y * resolution / resolution_scale
 
 	var noise = FastNoiseLite.new()
 	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
 
 	noise.seed = terrain_seed
-	noise.frequency = frequency / frequency_scale_div
+	noise.frequency = frequency / frequency_scale
 	noise.fractal_octaves = octaves
 
 	var verts = PackedVector3Array()
@@ -90,51 +100,58 @@ func _thread_spawn_chunk(chunk_pos, distance):
 	var normals = PackedVector3Array()
 	var uvs = PackedVector2Array()
 
-	for r in range(chunk_size + 3):
-		for c in range(chunk_size + 3):
-			var height = noise.get_noise_2d(c/chunk_resolution + chunk_x_offset, r/chunk_resolution + chunk_z_offset) * height_scale
-			var vert = Vector3(c/chunk_resolution, height, r/chunk_resolution)
-			var u = float(c)
-			var v = float(r)
+	for row in range(resolution + 3):
+		for col in range(resolution + 3):
+		
+			var height = noise.get_noise_2d(
+				col / float(resolution_scale) + chunk_x_offset, row / float(resolution_scale) + chunk_z_offset
+				) * height_scale
+		
+			var vert = Vector3(col / float(resolution_scale), height, row / float(resolution_scale))
+			var u = float(col)
+			var v = float(row)
+
 			uvs.append(Vector2(u, v))
 			verts.append(vert)
 
-	for r in range(chunk_size):
-		for c in range(chunk_size):
-			var base = (r+1) * (chunk_size + 3) + (c+1)
+	for row in range(resolution):
+		for col in range(resolution):
+			var base = (row+1) * (resolution + 3) + (col+1)
 			indices.append(base)
 			indices.append(base + 1)
-			indices.append(base + chunk_size + 3)
+			indices.append(base + resolution + 3)
 
 			indices.append(base + 1)
-			indices.append(base + chunk_size + 4)
-			indices.append(base + chunk_size + 3)
+			indices.append(base + resolution + 4)
+			indices.append(base + resolution + 3)
 			
 			faces.append(verts[base])
 			faces.append(verts[base + 1])
-			faces.append(verts[base + chunk_size + 3])
+			faces.append(verts[base + resolution + 3])
 			
 			faces.append(verts[base + 1])
-			faces.append(verts[base + chunk_size + 4])
-			faces.append(verts[base + chunk_size + 3])
+			faces.append(verts[base + resolution + 4])
+			faces.append(verts[base + resolution + 3])
 
-	for r in range(chunk_size+3):
-		for c in range(chunk_size+3):
-			if r == 0 or c==0 or r == chunk_size+2 or c == chunk_size+2:
+	for row in range(resolution+3):
+		for col in range(resolution+3):
+			if row==0 or col==0 or row==resolution+2 or col==resolution+2:
 				normals.append(Vector3(0.0, 0.0, 0.0))
 			else:
-				var idx = c + r * (chunk_size+3)
+				var idx = col + row * (resolution+3)
 				var left = verts[idx - 1]
 				var right = verts[idx + 1]
-				var up = verts[idx + (chunk_size + 3)]
-				var down = verts[idx - (chunk_size + 3)]
+				var up = verts[idx + (resolution + 3)]
+				var down = verts[idx - (resolution + 3)]
 				
 				var dx = right - left   # slope in X direction
 				var dz = up - down
 				var normal = dx.cross(dz).normalized()
+
 				normals.append(-normal)
 
 	var arrays = []
+
 	arrays.resize(Mesh.ARRAY_MAX)
 	arrays[Mesh.ARRAY_VERTEX] = verts
 	arrays[Mesh.ARRAY_INDEX] = indices
@@ -152,16 +169,16 @@ func _thread_spawn_chunk(chunk_pos, distance):
 func _add_mesh_main_thread(m: Array, c: CollisionShape3D, pos: Vector2i, dist: int):
 	pending_chunks.append([m, c, pos, dist])
 
-func _add_new_chunks(pos: Vector2, size: int, render_distance: int):
-	var player_chunk = Vector2i(floor(pos.x / size), floor(pos.y / size))
+func _add_new_chunks(pos: Vector2, size: int, rend_dist: int):
+	var center_chunk = Vector2i(floor(pos.x / size), floor(pos.y / size))
 	
 	var needed_chunks = {}
 	
-	for x in range(player_chunk.x - render_distance, player_chunk.x + render_distance + 1):
-		for z in range(player_chunk.y - render_distance, player_chunk.y + render_distance + 1):  # Use Vector2i for exact integer keys
-			var chunk_dist = int(floor(Vector2i(x, z).distance_to(player_chunk)))
-			var chunk = Vector2i(x, z)
-			needed_chunks[chunk] = chunk_dist
+	for x in range(center_chunk.x - rend_dist, center_chunk.x + rend_dist + 1):
+		for z in range(center_chunk.y - rend_dist, center_chunk.y + rend_dist + 1):  # Use Vector2i for exact integer keys
+			var chunk_dist = int(floor(Vector2i(x, z).distance_to(center_chunk)))
+			var chunk_pos = Vector2i(x, z)
+			needed_chunks[chunk_pos] = chunk_dist
 
 	for chunk_key in needed_chunks.keys():
 		if not chunks.has(chunk_key):
@@ -173,9 +190,6 @@ func _add_new_chunks(pos: Vector2, size: int, render_distance: int):
 			chunks[chunk_key]["mesh"].queue_free()
 			# Remove the dictionary entry
 			chunks.erase(chunk_key)
-
-func frac(x: float) -> float:
-	return x - floor(x)
 
 func _exit_tree() -> void:
 	for id in task_ids:
