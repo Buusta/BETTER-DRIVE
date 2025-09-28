@@ -6,10 +6,16 @@ extends RigidBody3D
 @export var tire_max_turn_degrees := 25.0
 @export var max_steer_speed := 25.0
 
+var mouse_sensitivity := 0.002
 var started := false
 var motor_input := 0
+@onready var springarm: SpringArm3D = $SpringArm3D
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventMouseMotion:
+		springarm.rotation.y -= event.relative.x * mouse_sensitivity
+		springarm.rotation.x -= event.relative.y * mouse_sensitivity
+
 	if event.is_action_pressed("move_forward"):
 		motor_input = 1
 	elif event.is_action_released("move_forward"):
@@ -39,6 +45,9 @@ func _basic_steering_rotation(delta: float):
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	springarm.spring_length = 10.0
+	
 	self.freeze = true
 	for wheel in wheels:
 		wheel.target_position.y = -(wheel.wheel_radius + wheel.rest_dist)

@@ -30,11 +30,10 @@ shadow_enabled = true
 
 [node name="Terrain_Spawner" type="Node3D" parent="." node_paths=PackedStringArray("player")]
 script = ExtResource("3_h2yge")
-player = NodePath("../Car/Camera3D")
-chunk_render_distance = 32
-octaves = 12
+player = NodePath("../Car")
+chunk_render_distance = 6
+octaves = 14
 height_scale = 250.0
-frequency = 1.0
 frequency_scale_div = 10000.0
 terrain_seed = 67970
 terrain_shader = ExtResource("2_8gbba")
@@ -42,7 +41,5 @@ terrain_shader = ExtResource("2_8gbba")
 [node name="fpscounter" parent="." instance=ExtResource("4_jjvhh")]
 
 [node name="Car" parent="." instance=ExtResource("4_kry3j")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
-
-[node name="Camera3D" type="Camera3D" parent="Car"]
-transform = Transform3D(-0.8116861, 0, 0.5840938, 0, 1, 0, -0.5840938, 0, -0.8116861, 4.6664367, 2.4918585, -5.46347)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48, 28, -9)
+accel = 1800.0

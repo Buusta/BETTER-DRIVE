@@ -1,6 +1,6 @@
 extends Node3D
 
-@export var player: Camera3D
+@export var player: Node3D
 
 @export var chunk_size := 32
 @export var chunk_resolution := 1.0
@@ -16,11 +16,14 @@ extends Node3D
 @export var terrain_shader: VisualShader
 
 var prev_player_chunk: Vector2i
+
 var chunks := {}
 var new_chunks := {}
+var generating_chunks := {}
+var pending_chunks = []
 
 var task_ids = []
-var pending_chunks = []
+
 
 func _ready() -> void:
 	terrain_seed = randi()
@@ -38,9 +41,9 @@ func _process(_delta: float) -> void:
 
 	if len(new_chunks) > 0:
 		for c in new_chunks.keys():
-			var task_id = WorkerThreadPool.add_task(Callable(self, "_thread_spawn_chunk").bind(c), false, "Generating")
+			var task_id = WorkerThreadPool.add_task(Callable(self, "_thread_spawn_chunk").bind(c, new_chunks[c]), false, "Generating")
 			task_ids.append(task_id)
-			chunks[c] = true
+			generating_chunks[c] = true
 		new_chunks.clear()
 
 	if task_ids.size() > 0:
@@ -57,15 +60,23 @@ func _process(_delta: float) -> void:
 			var mesh_inst = MeshInstance3D.new()
 			mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, chunk[0])
 			mesh_inst.mesh = mesh
-
+			var mat = ShaderMaterial.new()
+			mat.shader = terrain_shader
+			mesh_inst.material_override = mat
 			static_body.add_child(chunk[1])
 			mesh_inst.add_child(static_body)
+			var offset = Vector3(chunk[2].x * chunk_size, 0.0, chunk[2].y * chunk_size)
+			mesh_inst.transform.origin = offset
 			add_child(mesh_inst)
+			chunks[chunk[2]] = {
+				"mesh": mesh_inst,
+				"distance": chunk[3]
+				}
 
-func _thread_spawn_chunk(chunk_pos):
+func _thread_spawn_chunk(chunk_pos, distance):
 	var chunk_x_offset = chunk_pos.x * chunk_size / chunk_resolution
 	var chunk_z_offset = chunk_pos.y * chunk_size / chunk_resolution
-	
+
 	var noise = FastNoiseLite.new()
 	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
 
@@ -77,12 +88,15 @@ func _thread_spawn_chunk(chunk_pos):
 	var indices = PackedInt32Array()
 	var faces := PackedVector3Array()
 	var normals = PackedVector3Array()
-	
-	
+	var uvs = PackedVector2Array()
+
 	for r in range(chunk_size + 3):
 		for c in range(chunk_size + 3):
 			var height = noise.get_noise_2d(c/chunk_resolution + chunk_x_offset, r/chunk_resolution + chunk_z_offset) * height_scale
-			var vert = Vector3(c/chunk_resolution + chunk_x_offset, height, r/chunk_resolution + chunk_z_offset)
+			var vert = Vector3(c/chunk_resolution, height, r/chunk_resolution)
+			var u = float(c)
+			var v = float(r)
+			uvs.append(Vector2(u, v))
 			verts.append(vert)
 
 	for r in range(chunk_size):
@@ -104,7 +118,6 @@ func _thread_spawn_chunk(chunk_pos):
 			faces.append(verts[base + chunk_size + 4])
 			faces.append(verts[base + chunk_size + 3])
 
-	
 	for r in range(chunk_size+3):
 		for c in range(chunk_size+3):
 			if r == 0 or c==0 or r == chunk_size+2 or c == chunk_size+2:
@@ -126,12 +139,7 @@ func _thread_spawn_chunk(chunk_pos):
 	arrays[Mesh.ARRAY_VERTEX] = verts
 	arrays[Mesh.ARRAY_INDEX] = indices
 	arrays[Mesh.ARRAY_NORMAL] = normals
-
-	#var mesh = ArrayMesh.new()
-	#mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
-
-	#var mesh_inst = MeshInstance3D.new()
-	#mesh_inst.mesh = mesh
+	arrays[Mesh.ARRAY_TEX_UV] = uvs
 
 	var concave = ConcavePolygonShape3D.new()
 	concave.set_faces(faces)
@@ -139,23 +147,32 @@ func _thread_spawn_chunk(chunk_pos):
 	var collision_shape = CollisionShape3D.new()
 	collision_shape.shape = concave
 
-	#if terrain_shader:
-		#var mat = ShaderMaterial.new()
-		#mat.shader = terrain_shader
-		#mesh_inst.material_override = mat
+	call_deferred("_add_mesh_main_thread", arrays, collision_shape, chunk_pos, distance)
 
-	call_deferred("_add_mesh_main_thread", arrays, collision_shape)
-
-func _add_mesh_main_thread(m: Array, c: CollisionShape3D):
-	pending_chunks.append([m, c])
+func _add_mesh_main_thread(m: Array, c: CollisionShape3D, pos: Vector2i, dist: int):
+	pending_chunks.append([m, c, pos, dist])
 
 func _add_new_chunks(pos: Vector2, size: int, render_distance: int):
-	var player_chunk_pos = Vector2i(floor(pos.x / size), floor(pos.y / size))
-	for x in range(player_chunk_pos.x - render_distance, player_chunk_pos.x + render_distance + 1):
-		for z in range(player_chunk_pos.y - render_distance, player_chunk_pos.y + render_distance + 1):
-			var chunk_xz = Vector2i(x, z)  # Use Vector2i for exact integer keys
-			if not chunks.has(chunk_xz) and not new_chunks.has(chunk_xz):
-				new_chunks[chunk_xz] = true
+	var player_chunk = Vector2i(floor(pos.x / size), floor(pos.y / size))
+	
+	var needed_chunks = {}
+	
+	for x in range(player_chunk.x - render_distance, player_chunk.x + render_distance + 1):
+		for z in range(player_chunk.y - render_distance, player_chunk.y + render_distance + 1):  # Use Vector2i for exact integer keys
+			var chunk_dist = int(floor(Vector2i(x, z).distance_to(player_chunk)))
+			var chunk = Vector2i(x, z)
+			needed_chunks[chunk] = chunk_dist
+
+	for chunk_key in needed_chunks.keys():
+		if not chunks.has(chunk_key):
+			new_chunks[chunk_key] = needed_chunks[chunk_key]
+
+	for chunk_key in chunks.keys():
+		if not needed_chunks.has(chunk_key):
+			# Free the mesh instance
+			chunks[chunk_key]["mesh"].queue_free()
+			# Remove the dictionary entry
+			chunks.erase(chunk_key)
 
 func frac(x: float) -> float:
 	return x - floor(x)
