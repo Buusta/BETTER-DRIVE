@@ -4,6 +4,7 @@ extends RigidBody3D
 @export var accel := 600.0
 @export var tire_turn_speed := 2.0
 @export var tire_max_turn_degrees := 25.0
+@export var max_steer_speed := 25.0
 
 var started := false
 var motor_input := 0
@@ -24,11 +25,12 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _basic_steering_rotation(delta: float):
 	var turn_input := Input.get_axis('move_right', 'move_left') * tire_turn_speed
+	var steer_angle = max((1.0-((linear_velocity.length() * 3.6) / max_steer_speed)), .1)
 	
 	if turn_input:
-		$WheelRay_FL.rotation.y = clampf($WheelRay_FL.rotation.y + turn_input * delta,
+		$WheelRay_FL.rotation.y = clampf($WheelRay_FL.rotation.y + turn_input * delta * steer_angle,
 			deg_to_rad(-tire_max_turn_degrees), deg_to_rad(tire_max_turn_degrees))
-		$WheelRay_FR.rotation.y = clampf($WheelRay_FR.rotation.y + turn_input * delta,
+		$WheelRay_FR.rotation.y = clampf($WheelRay_FR.rotation.y + turn_input * delta * steer_angle,
 			deg_to_rad(-tire_max_turn_degrees), deg_to_rad(tire_max_turn_degrees))
 	
 	else:

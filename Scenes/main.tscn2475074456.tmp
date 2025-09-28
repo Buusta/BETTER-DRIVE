@@ -33,10 +33,10 @@ script = ExtResource("3_h2yge")
 player = NodePath("../Car/Camera3D")
 chunk_resolution = 0.5
 chunk_render_distance = 16
-octaves = 12
+octaves = 8
 height_scale = 250.0
 frequency = 1.0
-frequency_scale_div = 10000.0
+frequency_scale_div = 20000.0
 terrain_seed = 67970
 terrain_shader = ExtResource("2_8gbba")
 
@@ -44,11 +44,9 @@ terrain_shader = ExtResource("2_8gbba")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.0101357, 3.2545822)
 freeze = true
 accel = 2000.0
-tire_turn_speed = 1.0
 
 [node name="Camera3D" type="Camera3D" parent="Car"]
 transform = Transform3D(-0.9208319, -0.14306003, 0.36277053, 2.2709208e-09, 0.9302768, 0.36685842, -0.38995975, 0.33781493, -0.8566286, 4.702086, 3.6416006, -7.0772667)
 fov = 58.62595
 
-[node name="fpscounter" parent="." node_paths=PackedStringArray("car") instance=ExtResource("4_jjvhh")]
-car = NodePath("../Car")
+[node name="fpscounter" parent="." instance=ExtResource("4_jjvhh")]
