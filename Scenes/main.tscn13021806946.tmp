@@ -1,9 +1,9 @@
 [gd_scene load_steps=8 format=3 uid="uid://dcuef1fiebl1h"]
 
 [ext_resource type="Shader" uid="uid://qogiayfdhdbe" path="res://Assets/Ground.tres" id="2_8gbba"]
+[ext_resource type="PackedScene" uid="uid://gl66cbv21e5f" path="res://Scenes/Car.tscn" id="2_bo1nx"]
 [ext_resource type="Script" uid="uid://cbbucwmb1kua1" path="res://Scripts/terrain_spawner.gd" id="3_h2yge"]
 [ext_resource type="PackedScene" uid="uid://cl32v8luarx6x" path="res://Scenes/fpscounter.tscn" id="4_jjvhh"]
-[ext_resource type="PackedScene" uid="uid://gl66cbv21e5f" path="res://Scenes/Car.tscn" id="4_kry3j"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_a202f"]
 sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
@@ -31,7 +31,7 @@ shadow_enabled = true
 [node name="Terrain_Spawner" type="Node3D" parent="." node_paths=PackedStringArray("player")]
 script = ExtResource("3_h2yge")
 player = NodePath("../Car/Camera3D")
-chunk_render_distance = 32
+chunk_render_distance = 6
 octaves = 12
 height_scale = 250.0
 frequency = 1.0
@@ -39,10 +39,15 @@ frequency_scale_div = 10000.0
 terrain_seed = 67970
 terrain_shader = ExtResource("2_8gbba")
 
-[node name="fpscounter" parent="." instance=ExtResource("4_jjvhh")]
-
-[node name="Car" parent="." instance=ExtResource("4_kry3j")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
+[node name="Car" parent="." instance=ExtResource("2_bo1nx")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.0101357, 3.2545822)
+freeze = true
+accel = 2000.0
+tire_turn_speed = 1.0
 
 [node name="Camera3D" type="Camera3D" parent="Car"]
-transform = Transform3D(-0.8116861, 0, 0.5840938, 0, 1, 0, -0.5840938, 0, -0.8116861, 4.6664367, 2.4918585, -5.46347)
+transform = Transform3D(-0.9208319, -0.14306003, 0.36277053, 2.2709208e-09, 0.9302768, 0.36685842, -0.38995975, 0.33781493, -0.8566286, 4.702086, 3.6416006, -7.0772667)
+fov = 58.62595
+
+[node name="fpscounter" parent="." node_paths=PackedStringArray("car") instance=ExtResource("4_jjvhh")]
+car = NodePath("../Car")

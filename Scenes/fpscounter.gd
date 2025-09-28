@@ -18,4 +18,4 @@ func _process(delta: float) -> void:
 	if frametimes.size() > 0:
 		$Label2.text = str(frametimes.max() * 1000)
 		
-	$Label.text = str(snapped(car.linear_velocity.length() * 3.6, 0.1))  + "km/h"
+	#w$Label.text = str(snapped(car.linear_velocity.length() * 3.6, 0.1))  + "km/h"

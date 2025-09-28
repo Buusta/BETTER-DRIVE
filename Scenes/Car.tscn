@@ -58,7 +58,7 @@ enabled = false
 script = ExtResource("3_jbim0")
 spring_stiffness = 40000.0
 spring_damping = 3000.0
-rest_dist = 0.65
+rest_dist = 0.75
 
 [node name="Wheel" type="MeshInstance3D" parent="WheelRay_FL"]
 transform = Transform3D(0, 1, 0, -1, 0, 0, 0, 0, 1, 0, -0.48, 0)
@@ -71,7 +71,7 @@ enabled = false
 script = ExtResource("3_jbim0")
 spring_stiffness = 40000.0
 spring_damping = 3000.0
-rest_dist = 0.65
+rest_dist = 0.75
 is_motor = true
 
 [node name="Wheel" type="MeshInstance3D" parent="WheelRay_BL"]
@@ -85,7 +85,7 @@ enabled = false
 script = ExtResource("3_jbim0")
 spring_stiffness = 40000.0
 spring_damping = 3000.0
-rest_dist = 0.65
+rest_dist = 0.75
 
 [node name="Wheel" type="MeshInstance3D" parent="WheelRay_FR"]
 transform = Transform3D(0, 1, 0, -1, 0, 0, 0, 0, 1, 0, -0.48, 0)
@@ -98,7 +98,7 @@ enabled = false
 script = ExtResource("3_jbim0")
 spring_stiffness = 40000.0
 spring_damping = 3000.0
-rest_dist = 0.65
+rest_dist = 0.75
 is_motor = true
 
 [node name="Wheel" type="MeshInstance3D" parent="WheelRay_BR"]

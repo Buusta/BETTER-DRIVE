@@ -39,6 +39,7 @@ func _basic_steering_rotation(delta: float):
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
+	self.freeze = true
 	for wheel in wheels:
 		wheel.target_position.y = -(wheel.wheel_radius + wheel.rest_dist)
 	pass # Replace with function body.

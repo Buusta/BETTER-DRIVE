@@ -22,7 +22,6 @@ var new_chunks := {}
 var task_ids = []
 var pending_chunks = []
 
-
 func _ready() -> void:
 	terrain_seed = randi()
 	_add_new_chunks(Vector2(player.position.x, player.position.z), chunk_size, chunk_render_distance)
@@ -32,6 +31,7 @@ func _process(_delta: float) -> void:
 	# Add new chunks to new_chunk list if the player has moved.
 	var px = player.global_position.x
 	var pz = player.global_position.z
+
 	if prev_player_chunk != Vector2i(floor(px / chunk_size / chunk_resolution), floor(pz / chunk_size / chunk_resolution)): # if player not in player chunk
 		prev_player_chunk = Vector2i(floor(px / chunk_size), floor(pz / chunk_size))
 		_add_new_chunks(Vector2(px, pz), chunk_size, chunk_render_distance)
@@ -53,9 +53,14 @@ func _process(_delta: float) -> void:
 		for i in range(min(chunks_per_frame, pending_chunks.size())):
 			var chunk = pending_chunks.pop_front()
 			var static_body = StaticBody3D.new()
+			var mesh = ArrayMesh.new()
+			var mesh_inst = MeshInstance3D.new()
+			mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, chunk[0])
+			mesh_inst.mesh = mesh
+
 			static_body.add_child(chunk[1])
-			chunk[0].add_child(static_body)
-			add_child(chunk[0])
+			mesh_inst.add_child(static_body)
+			add_child(mesh_inst)
 
 func _thread_spawn_chunk(chunk_pos):
 	var chunk_x_offset = chunk_pos.x * chunk_size / chunk_resolution
@@ -68,80 +73,81 @@ func _thread_spawn_chunk(chunk_pos):
 	noise.frequency = frequency / frequency_scale_div
 	noise.fractal_octaves = octaves
 
-	#var st = SurfaceTool.new()
-	#st.begin(Mesh.PRIMITIVE_TRIANGLES)
-
 	var verts = PackedVector3Array()
 	var indices = PackedInt32Array()
 	var faces := PackedVector3Array()
-
-	for z in range(chunk_size + 1):
-		for x in range(chunk_size + 1):
-			var height = noise.get_noise_2d(x/chunk_resolution + chunk_x_offset, z/chunk_resolution + chunk_z_offset) * height_scale
-			var vert = Vector3(x/chunk_resolution + chunk_x_offset, height, z/chunk_resolution + chunk_z_offset)
-
-			var u = (x + chunk_x_offset)
-			var v = (z + chunk_z_offset)
-			#st.set_uv(Vector2(u, v))
-			#st.add_vertex(vert)	
+	var normals = PackedVector3Array()
+	
+	
+	for r in range(chunk_size + 3):
+		for c in range(chunk_size + 3):
+			var height = noise.get_noise_2d(c/chunk_resolution + chunk_x_offset, r/chunk_resolution + chunk_z_offset) * height_scale
+			var vert = Vector3(c/chunk_resolution + chunk_x_offset, height, r/chunk_resolution + chunk_z_offset)
 			verts.append(vert)
 
-	for z in range(chunk_size):
-		for x in range(chunk_size):
-			var base = z * (chunk_size + 1) + x
+	for r in range(chunk_size):
+		for c in range(chunk_size):
+			var base = (r+1) * (chunk_size + 3) + (c+1)
 			indices.append(base)
 			indices.append(base + 1)
-			indices.append(base + chunk_size + 1)
-#
-			indices.append(base + 1)
-			indices.append(base + chunk_size + 2)
-			indices.append(base + chunk_size + 1)
+			indices.append(base + chunk_size + 3)
 
+			indices.append(base + 1)
+			indices.append(base + chunk_size + 4)
+			indices.append(base + chunk_size + 3)
+			
 			faces.append(verts[base])
 			faces.append(verts[base + 1])
-			faces.append(verts[base + chunk_size + 1])
-
+			faces.append(verts[base + chunk_size + 3])
+			
 			faces.append(verts[base + 1])
-			faces.append(verts[base + chunk_size + 2])
-			faces.append(verts[base + chunk_size + 1])
+			faces.append(verts[base + chunk_size + 4])
+			faces.append(verts[base + chunk_size + 3])
 
-	var tim = Time.get_ticks_usec()
+	
+	for r in range(chunk_size+3):
+		for c in range(chunk_size+3):
+			if r == 0 or c==0 or r == chunk_size+2 or c == chunk_size+2:
+				normals.append(Vector3(0.0, 0.0, 0.0))
+			else:
+				var idx = c + r * (chunk_size+3)
+				var left = verts[idx - 1]
+				var right = verts[idx + 1]
+				var up = verts[idx + (chunk_size + 3)]
+				var down = verts[idx - (chunk_size + 3)]
+				
+				var dx = right - left   # slope in X direction
+				var dz = up - down
+				var normal = dx.cross(dz).normalized()
+				normals.append(-normal)
 
 	var arrays = []
 	arrays.resize(Mesh.ARRAY_MAX)
 	arrays[Mesh.ARRAY_VERTEX] = verts
 	arrays[Mesh.ARRAY_INDEX] = indices
-#
-	##st.generate_normals()
-	##var mesh = st.commit()
-	#
-	var mesh = ArrayMesh.new()
-	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
-	#
-	var mesh_inst = MeshInstance3D.new()
-	mesh_inst.mesh = mesh
-#
+	arrays[Mesh.ARRAY_NORMAL] = normals
+
+	#var mesh = ArrayMesh.new()
+	#mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+
+	#var mesh_inst = MeshInstance3D.new()
+	#mesh_inst.mesh = mesh
+
 	var concave = ConcavePolygonShape3D.new()
 	concave.set_faces(faces)
 
-	
 	var collision_shape = CollisionShape3D.new()
 	collision_shape.shape = concave
-	#static_body.add_child(collision_shape)
-	#mesh_inst.add_child(static_body)
-#
-#
-	if terrain_shader:
-		var mat = ShaderMaterial.new()
-		mat.shader = terrain_shader
-		mesh_inst.material_override = mat
-#
-	call_deferred("_add_mesh_main_thread", mesh_inst, collision_shape)
 
+	#if terrain_shader:
+		#var mat = ShaderMaterial.new()
+		#mat.shader = terrain_shader
+		#mesh_inst.material_override = mat
 
-func _add_mesh_main_thread(m: MeshInstance3D, c: CollisionShape3D):
-	if not m.is_inside_tree():
-		pending_chunks.append([m, c])
+	call_deferred("_add_mesh_main_thread", arrays, collision_shape)
+
+func _add_mesh_main_thread(m: Array, c: CollisionShape3D):
+	pending_chunks.append([m, c])
 
 func _add_new_chunks(pos: Vector2, size: int, render_distance: int):
 	var player_chunk_pos = Vector2i(floor(pos.x / size), floor(pos.y / size))
