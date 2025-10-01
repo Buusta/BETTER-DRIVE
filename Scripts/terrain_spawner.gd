@@ -175,11 +175,8 @@ func _add_mesh_main_thread(m: Array, c: CollisionShape3D, pos: Vector2i, dist: i
 	pending_chunks.append([m, c, pos, dist])
 
 func _add_new_chunks(pos: Vector2, rend_dist: int):
-	var center_chunk = Vector2i(
-	floor(pos.x / chunk_size),
-	floor(pos.y / chunk_size)
-	)
-	
+	var center_chunk = Vector2i(floor(pos.x / chunk_size), floor(pos.y / chunk_size))
+
 	var needed_chunks = {}
 	
 	for x in range(center_chunk.x - rend_dist, center_chunk.x + rend_dist + 1):
@@ -198,7 +195,13 @@ func _add_new_chunks(pos: Vector2, rend_dist: int):
 			# Free the mesh instance
 			chunks[chunk_key]["mesh"].queue_free()
 			# Remove the dictionary entry
-			chunks.erase(chunk_key)
+			chunks.erase(chunk_key) 
+
+		elif needed_chunks.has(chunk_key):
+			var new_dist = needed_chunks[chunk_key]
+			if chunks[chunk_key]["distance"] != new_dist:
+				chunks[chunk_key]["distance"] = new_dist
+				print(new_dist)
 
 func _exit_tree() -> void:
 	for id in task_ids:
