@@ -2,8 +2,8 @@ extends Node3D
 
 @export var player: Node3D # can be anything but it needs a position so chunks can generate around it
 
-@export var resolution := 32 # the base resolutib of the chunk
-@export var resolution_scale := 1 # how many times the chunk will be divided
+@export var resolution := 32 # the base resolution of the chunk
+@export var chunk_size := 32 # the size of a chunk (m x m)
 @export var render_distance := 1 # how many chunks will be loaded in
 
 @export var octaves := 4 # how detailed the noise is
@@ -26,16 +26,16 @@ var pending_chunks = [] # vals = mesh_arrays, collision, Vector2i position (chun
 var task_ids = [] # all WorkerThreadPool tasks that need to be completed.
 
 func _ready() -> void:
-	_add_new_chunks(Vector2(player.position.x, player.position.z), resolution, render_distance)
+	_add_new_chunks(Vector2(player.position.x, player.position.z), render_distance)
 
 func _process(_delta: float) -> void:
 	var px = player.global_position.x
 	var pz = player.global_position.z
 
 	# add new chunks to new_chunk list if the player has moved.
-	if prev_player_chunk != Vector2i(floor(px / resolution / resolution_scale), floor(pz / resolution / resolution_scale)): # if player not in player chunk
+	if prev_player_chunk != Vector2i(floor(px / resolution), floor(pz / resolution)): # if player not in player chunk
 		prev_player_chunk = Vector2i(floor(px / resolution), floor(pz / resolution))
-		_add_new_chunks(Vector2(px, pz), resolution, render_distance)
+		_add_new_chunks(Vector2(px, pz), render_distance)
 
 	# give workerThreadPool task if there are new chunks
 	if len(new_chunks) > 0:
@@ -74,7 +74,7 @@ func _process(_delta: float) -> void:
 			static_body.add_child(collision)
 			mesh_inst.add_child(static_body)
 
-			var offset = Vector3(chunk_pos.x * resolution, 0.0, chunk_pos.y * resolution)
+			var offset = Vector3(chunk_pos.x * chunk_size, 0.0, chunk_pos.y * chunk_size)
 			mesh_inst.transform.origin = offset
 			add_child(mesh_inst)
 
@@ -84,8 +84,8 @@ func _process(_delta: float) -> void:
 				}
 
 func _thread_spawn_chunk(chunk_pos, distance):
-	var chunk_x_offset = chunk_pos.x * resolution / resolution_scale
-	var chunk_z_offset = chunk_pos.y * resolution / resolution_scale
+	var chunk_x_offset = chunk_pos.x * chunk_size
+	var chunk_z_offset = chunk_pos.y * chunk_size
 
 	var noise = FastNoiseLite.new()
 	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
@@ -104,10 +104,15 @@ func _thread_spawn_chunk(chunk_pos, distance):
 		for col in range(resolution + 3):
 		
 			var height = noise.get_noise_2d(
-				col / float(resolution_scale) + chunk_x_offset, row / float(resolution_scale) + chunk_z_offset
+				col * float(chunk_size) / float(resolution) + chunk_x_offset, row * float(chunk_size) / float(resolution) + chunk_z_offset
 				) * height_scale
 		
-			var vert = Vector3(col / float(resolution_scale), height, row / float(resolution_scale))
+			var vert = Vector3(
+			col * float(chunk_size) / float(resolution),
+			height,
+			row * float(chunk_size) / float(resolution)
+			)
+			
 			var u = float(col)
 			var v = float(row)
 
@@ -169,15 +174,19 @@ func _thread_spawn_chunk(chunk_pos, distance):
 func _add_mesh_main_thread(m: Array, c: CollisionShape3D, pos: Vector2i, dist: int):
 	pending_chunks.append([m, c, pos, dist])
 
-func _add_new_chunks(pos: Vector2, size: int, rend_dist: int):
-	var center_chunk = Vector2i(floor(pos.x / size), floor(pos.y / size))
+func _add_new_chunks(pos: Vector2, rend_dist: int):
+	var center_chunk = Vector2i(
+	floor(pos.x / chunk_size),
+	floor(pos.y / chunk_size)
+	)
 	
 	var needed_chunks = {}
 	
 	for x in range(center_chunk.x - rend_dist, center_chunk.x + rend_dist + 1):
-		for z in range(center_chunk.y - rend_dist, center_chunk.y + rend_dist + 1):  # Use Vector2i for exact integer keys
-			var chunk_dist = int(floor(Vector2i(x, z).distance_to(center_chunk)))
+		for z in range(center_chunk.y - rend_dist, center_chunk.y + rend_dist + 1):
 			var chunk_pos = Vector2i(x, z)
+			var relative_pos = chunk_pos - center_chunk
+			var chunk_dist = max(abs(relative_pos.x), abs(relative_pos.y))
 			needed_chunks[chunk_pos] = chunk_dist
 
 	for chunk_key in needed_chunks.keys():

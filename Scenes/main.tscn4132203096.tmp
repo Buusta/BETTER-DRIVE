@@ -31,9 +31,14 @@ shadow_enabled = true
 [node name="Terrain_Spawner" type="Node3D" parent="." node_paths=PackedStringArray("player")]
 script = ExtResource("3_h2yge")
 player = NodePath("../Car")
+resolution = null
+chunk_size = null
 render_distance = 4
 octaves = 14
 height_scale = 20.0
+frequency = null
+frequency_scale = null
+chunks_per_frame = null
 terrain_shader = ExtResource("2_8gbba")
 
 [node name="fpscounter" parent="." instance=ExtResource("4_jjvhh")]
