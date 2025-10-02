@@ -12,7 +12,7 @@ var rotation_x := 0.0
 var rotation_y := 0.0
 var mouse_captured := true
 var move_speed = 10.0
-var speedup_speed = 5.0
+@export var speedup_speed = 5.0
 
 func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)

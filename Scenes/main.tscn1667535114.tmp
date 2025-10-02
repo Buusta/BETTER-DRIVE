@@ -1,8 +1,7 @@
-[gd_scene load_steps=9 format=3 uid="uid://dcuef1fiebl1h"]
+[gd_scene load_steps=8 format=3 uid="uid://dcuef1fiebl1h"]
 
 [ext_resource type="Shader" uid="uid://qogiayfdhdbe" path="res://Assets/Ground.tres" id="2_8gbba"]
 [ext_resource type="Script" uid="uid://cbbucwmb1kua1" path="res://Scripts/terrain_spawner.gd" id="3_h2yge"]
-[ext_resource type="Script" uid="uid://0ticgkiahhqp" path="res://Scenes/terrain_seed_handler.gd" id="3_kry3j"]
 [ext_resource type="PackedScene" uid="uid://cl32v8luarx6x" path="res://Scenes/UI.tscn" id="4_jjvhh"]
 [ext_resource type="PackedScene" uid="uid://gl66cbv21e5f" path="res://Scenes/Car.tscn" id="4_kry3j"]
 
@@ -38,24 +37,14 @@ environment = SubResource("Environment_a0tk4")
 transform = Transform3D(-0.8660254, -0.43301278, 0.24999999, -0.3669776, 0.8900653, 0.27039084, -0.33959898, 0.14242092, -0.92972517, 0, 0, 0)
 shadow_enabled = true
 
-[node name="Car" parent="." instance=ExtResource("4_kry3j")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 20, 0)
-accel = 3200.0
-
-[node name="UI" parent="." node_paths=PackedStringArray("car") instance=ExtResource("4_jjvhh")]
-car = NodePath("../Car")
-
-[node name="TerrainSeedHandler" type="Node3D" parent="." node_paths=PackedStringArray("terrain1", "terrain2")]
-script = ExtResource("3_kry3j")
-terrain1 = NodePath("Terrain_Spawner")
-terrain2 = NodePath("Far_Terrain_Spawner")
-
-[node name="Far_Terrain_Spawner" type="Node3D" parent="TerrainSeedHandler" node_paths=PackedStringArray("player")]
+[node name="Far_Terrain_Spawner" type="Node3D" parent="." node_paths=PackedStringArray("player")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -27.445015, 0)
 script = ExtResource("3_h2yge")
-player = NodePath("../../Car")
-chunk_size = 2048
+player = NodePath("../Car")
+resolution = 2
+chunk_size = 1024
 render_distance = 32
+minimum_resolution = 8
 octaves = 14
 height_scale = 250.0
 frequency = 0.1
@@ -66,11 +55,11 @@ mountain_frequency_scale = 2000
 chunks_per_frame = 25
 terrain_shader = ExtResource("2_8gbba")
 
-[node name="Terrain_Spawner" type="Node3D" parent="TerrainSeedHandler" node_paths=PackedStringArray("player")]
+[node name="Terrain_Spawner" type="Node3D" parent="." node_paths=PackedStringArray("player")]
 script = ExtResource("3_h2yge")
-player = NodePath("../../Car")
+player = NodePath("../Car")
 chunk_size = 64
-render_distance = 14
+render_distance = 16
 minimum_resolution = 2
 generate_collision = true
 octaves = 12
@@ -81,3 +70,10 @@ mountain_height_scale = 5000
 mountain_frequency = 0.02
 mountain_frequency_scale = 2000
 terrain_shader = ExtResource("2_8gbba")
+
+[node name="Car" parent="." instance=ExtResource("4_kry3j")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 114.128265, 0)
+accel = 3200.0
+
+[node name="UI" parent="." node_paths=PackedStringArray("car") instance=ExtResource("4_jjvhh")]
+car = NodePath("../Car")

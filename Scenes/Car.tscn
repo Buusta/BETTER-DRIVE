@@ -111,3 +111,4 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.99611145, 0.1630001)
 spring_length = 10.0
 
 [node name="Camera3D" type="Camera3D" parent="SpringArm3D"]
+far = 100000.0

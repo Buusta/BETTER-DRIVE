@@ -1,0 +1,24 @@
+[gd_scene load_steps=2 format=3 uid="uid://cl32v8luarx6x"]
+
+[ext_resource type="Script" uid="uid://bu33xam6rwphs" path="res://Scripts/UI.gd" id="1_w371h"]
+
+[node name="UI" type="CanvasLayer"]
+script = ExtResource("1_w371h")
+
+[node name="Frametime" type="Label" parent="."]
+offset_left = 2.0
+offset_top = 1.0
+offset_right = 74.0
+offset_bottom = 24.0
+
+[node name="Distance Driven" type="Label" parent="."]
+offset_left = 11.0
+offset_top = 191.0
+offset_right = 171.0
+offset_bottom = 231.0
+
+[node name="Speed" type="Label" parent="."]
+offset_left = 11.0
+offset_top = 240.0
+offset_right = 171.0
+offset_bottom = 280.0

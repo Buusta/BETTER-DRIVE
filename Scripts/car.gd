@@ -9,12 +9,15 @@ extends RigidBody3D
 var mouse_sensitivity := 0.002
 var started := false
 var motor_input := 0
+
 @onready var springarm: SpringArm3D = $SpringArm3D
+var mouse_captured := true
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
-		springarm.rotation.y -= event.relative.x * mouse_sensitivity
-		springarm.rotation.x -= event.relative.y * mouse_sensitivity
+		if mouse_captured:
+			springarm.rotation.y -= event.relative.x * mouse_sensitivity
+			springarm.rotation.x -= event.relative.y * mouse_sensitivity
 
 	if event.is_action_pressed("move_forward"):
 		motor_input = 1
@@ -28,6 +31,17 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	if event.is_action_pressed('spawn_ball'):
 		start()
+		
+	if event.is_action_pressed('reset'):
+		reset()
+		
+	if event is InputEventKey and event.pressed:
+		if event.keycode == Key.KEY_ESCAPE:
+			mouse_captured = not mouse_captured
+			if mouse_captured:
+				Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+			else:
+				Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
 func _basic_steering_rotation(delta: float):
 	var turn_input := Input.get_axis('move_right', 'move_left') * tire_turn_speed
@@ -45,6 +59,7 @@ func _basic_steering_rotation(delta: float):
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
+	
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	springarm.spring_length = 10.0
 	
@@ -56,6 +71,12 @@ func _ready() -> void:
 func start():
 	started = true
 	self.freeze = false
+
+func reset():
+	rotation = Vector3(0.0, rotation.y, 0.0)
+	position += Vector3(0.0, 5.0 ,0.0)
+	linear_velocity = Vector3.ZERO
+	angular_velocity = Vector3.ZERO
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _physics_process(delta: float) -> void:
