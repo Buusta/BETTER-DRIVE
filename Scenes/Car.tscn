@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=4 uid="uid://gl66cbv21e5f"]
+[gd_scene load_steps=9 format=4 uid="uid://gl66cbv21e5f"]
 
 [ext_resource type="PackedScene" uid="uid://bpk6sxin7xl47" path="res://Assets/CarBody.glb" id="1_1k6jk"]
 [ext_resource type="Script" uid="uid://cehhidk6adjsc" path="res://Scripts/car.gd" id="1_y2uan"]
@@ -40,6 +40,8 @@ _surfaces = [{
 }]
 blend_shape_mode = 0
 shadow_mesh = SubResource("ArrayMesh_5sbo7")
+
+[sub_resource type="SeparationRayShape3D" id="SeparationRayShape3D_jbim0"]
 
 [node name="Car" type="RigidBody3D" node_paths=PackedStringArray("wheels")]
 mass = 1100.0
@@ -108,6 +110,7 @@ skeleton = NodePath("")
 
 [node name="SpringArm3D" type="SpringArm3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.99611145, 0.1630001)
+shape = SubResource("SeparationRayShape3D_jbim0")
 spring_length = 10.0
 
 [node name="Camera3D" type="Camera3D" parent="SpringArm3D"]

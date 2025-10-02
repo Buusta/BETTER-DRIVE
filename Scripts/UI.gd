@@ -2,7 +2,7 @@ extends CanvasLayer
 
 var frametimes = []
 var max_frametimes = 100
-var max_frametime = 100
+var max_frametime: int
 var current_index = 0
 
 var driven_distance = 0.0
@@ -10,8 +10,10 @@ var prev_position: Vector3
 
 @export var car: RigidBody3D
 @onready var timer: Timer = $Timer
-var time: String
+var time := '00h 00m 00s'
 var seconds_passed: int
+
+var vsync_rate := DisplayServer.screen_get_refresh_rate()
 
 func _ready() -> void:
 	prev_position = car.position
@@ -30,14 +32,11 @@ func _process(delta: float) -> void:
 
 	$"Distance Driven".text = 'Distance driven: ' + str(snapped(driven_distance / 1000, .01)) + ' km'
 	$Altitude.text = 'Altitude: ' + str(int(car.position.y)) + ' m'
-	
-	
 	$Time.text = time
 
 	# Add delta to frametimes
 	if frametimes.size() < max_frametimes:
 		frametimes.append(delta)
-
 	else:
 		# Overwrite in circular fashion
 		frametimes[current_index] = delta
@@ -45,17 +44,18 @@ func _process(delta: float) -> void:
 
 	# Update label with minimum frametime
 	if frametimes.size() > 0:
-		max_frametime = frametimes.max() * 1000
-		if max_frametime > 10:
-			$Frametime.text = str(max_frametime)
-		else:
-			$Frametime.text = ''
-		
-	#w$Label.text = str(snapped(car.linear_velocity.length() * 3.6, 0.1))  + "km/h"
+		max_frametime = frametimes.max()
+
+	# print out high frames in the console
+	if delta > (1.2 / vsync_rate) and seconds_passed > 10:
+		if not OS.has_feature('editor'):
+			push_warning('frametime high: ' + str(delta * 1000) + ' ms at time: ' + time)
 
 func _on_timer_timeout() -> void:
 	seconds_passed += 1
 	var seconds = seconds_passed % 60
+	@warning_ignore("integer_division")
 	var minutes = (seconds_passed / 60) % 60
-	var hours = seconds_passed / 3600
+	@warning_ignore("integer_division")
+	var hours = (seconds_passed / 3600)
 	time = "%02dh %02dm %02ds" % [hours, minutes, seconds]
