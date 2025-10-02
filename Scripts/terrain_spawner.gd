@@ -16,7 +16,7 @@ extends Node3D
 @export var mountain_height_scale := 100
 @export var mountain_frequency := 0.5
 @export var mountain_frequency_scale := 250
-@export var chunks_per_frame := 3 # how many chunk meshes can be generated and added as child per frame. helps with performance
+@export var chunks_per_frame_target := 3 # how many chunk meshes can be generated and added as child per frame. helps with performance
 @export var noise_seed = 21654
 @export var terrain_shader: VisualShader # terrain shader
 
@@ -32,11 +32,19 @@ var pending_chunks = [] # vals = mesh_arrays, collision, Vector2i position (chun
 
 var task_ids = [] # all WorkerThreadPool tasks that need to be completed.
 
+var chunks_per_frame := 25
+var target_chunks_per_frame := false
+
 func _ready() -> void:
-	chunks_per_frame = 50
 	_add_new_chunks(Vector2(player.position.x, player.position.z), render_distance)
 
 func _process(_delta: float) -> void:
+	# make the first 10s of terrain generation fast, then slow down
+	if not target_chunks_per_frame:
+		if Time.get_ticks_msec() > 10000:
+			chunks_per_frame = chunks_per_frame_target
+			target_chunks_per_frame = true
+
 	var px = player.global_position.x
 	var pz = player.global_position.z
 
