@@ -1,4 +1,4 @@
-extends Node3D
+extends Node
 
 @export var player: Node3D # can be anything but it needs a position so chunks can generate around it
 
@@ -7,6 +7,7 @@ extends Node3D
 @export var render_distance := 1 # how many chunks will be loaded in
 @export var minimum_resolution := 4
 @export var generate_collision := false
+@export var yoffset := 0.0
 
 @export var octaves := 4 # how detailed the noise is
 @export var height_scale := 25.0 # how much the terrain will be scaled along the y axis
@@ -17,11 +18,9 @@ extends Node3D
 @export var mountain_frequency := 0.5
 @export var mountain_frequency_scale := 250
 @export var chunks_per_frame_target := 3 # how many chunk meshes can be generated and added as child per frame. helps with performance
-@export var noise_seed = 21654
 @export var terrain_shader: VisualShader # terrain shader
 
-
-#var terrain_seed = seed # the random seed for the terrain
+var noise_seed = 21654
 
 var prev_player_chunk: Vector2i # the chunk the player was in last frame
 
@@ -29,6 +28,8 @@ var chunks := {} # key = Vector2i position (chunk_pos), vals = MeshInstance3D, D
 var new_chunks := {} # key = Vector2i position (chunk_pos), vals = Distance
 var generating_chunks := {} # key = Vector2i position (chunk_pos), vals = true
 var pending_chunks = [] # vals = mesh_arrays, collision, Vector2i position (chunk_pos), distance
+
+var spawn_node: Node3D # the node the terrain should spawn under
 
 var task_ids = [] # all WorkerThreadPool tasks that need to be completed.
 
@@ -45,8 +46,8 @@ func _process(_delta: float) -> void:
 			chunks_per_frame = chunks_per_frame_target
 			target_chunks_per_frame = true
 
-	var px = player.global_position.x
-	var pz = player.global_position.z
+	var px = player.position.x
+	var pz = player.position.z
 
 	# add new chunks to new_chunk list if the player has moved.
 	if prev_player_chunk != Vector2i(floor(px / resolution), floor(pz / resolution)): # if player not in player chunk
@@ -96,9 +97,9 @@ func _process(_delta: float) -> void:
 				static_body.add_child(collision)
 				mesh_inst.add_child(static_body)
 
-			var offset = Vector3(chunk_pos.x * chunk_size, 0.0, chunk_pos.y * chunk_size)
+			var offset = Vector3(chunk_pos.x * chunk_size, yoffset, chunk_pos.y * chunk_size)
 			mesh_inst.transform.origin = offset
-			add_child(mesh_inst)
+			spawn_node.add_child(mesh_inst)
 
 			chunks[chunk_pos] = {
 				"mesh": mesh_inst,
