@@ -11,58 +11,95 @@ extends Node
 @export var noise_seed = 21654
 @export var road_shader: VisualShader
 
-var segments = 100
-var segment_length = 100
-var segment_max_degree = 5
+@export var segments = 20
+@export var sub_segments = 3
+@export var segment_length = 5
+@export var segment_max_degree = 5
+var player: Node3D
 
 var do_once = false
 
-var resolution = 10
+@export var resolution = 2
+@export var road_samples = 5
 @export var width = 10.0
 var spawn_node: Node3D
 
+var init_dir = Vector2(2 * randf() - 1, 2 * randf() - 1)
+var nodes = { 0:{'pos':Vector2(0.0, 0.0),
+				'dir':init_dir} }
+
+var noise = FastNoiseLite.new()
+var mountain_noise = FastNoiseLite.new()
+
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-	pass
-
-func _gen_road():
-	var noise = FastNoiseLite.new()
 	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
 
 	noise.seed = noise_seed
-	print(noise_seed)
 	noise.frequency = frequency / frequency_scale
 	noise.fractal_octaves = octaves
-	
-	var mountain_noise = FastNoiseLite.new()
+
 	mountain_noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
 	mountain_noise.seed = noise_seed
 	mountain_noise.frequency = mountain_frequency / mountain_frequency_scale
-	
-	var points = [Vector3.ZERO]
-	var forward = Vector2(1.0, 0.0)
 
-	for i in range(segments):
-		var angle_offset = deg_to_rad(randfn(0.0, segment_max_degree)) # in radians
-		var new_dir_2d = Vector2(forward.x, forward.y).rotated(angle_offset).normalized()
-		forward = new_dir_2d
-		var start = points[len(points)-1]
-		var end2d = Vector2(start.x, start.y) + new_dir_2d * segment_length
-		var height = noise.get_noise_2d(end2d.x, end2d.y) * height_scale
-		var mountain_height = (abs(mountain_noise.get_noise_2d(end2d.x, end2d.y))**2) * mountain_height_scale
-		var total_height = height + mountain_height
-		var end = Vector3(end2d.x, total_height, end2d.y)
-		points.append(end)
+func _process(_delta: float) -> void:
+	var closest_idx = 0
+	var closest_dist = INF
+	var pending_nodes = []
+	var generate_segments = false
 
-	for idx in range(len(points)-4):
-		_generate_road_segment(points[idx], points[idx+1], points[idx+2], points[idx+3], points[idx+4])
+	if do_once:
+		for key in nodes.keys():
+			if (nodes[key]['pos'] - Vector2(player.position.x, player.position.z)).length() < closest_dist:
+				closest_idx = key
+				closest_dist = (nodes[key]['pos'] - Vector2(player.position.x, player.position.z)).length()
+		pending_nodes.append(closest_idx)
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
-	if not do_once:
-		if not noise_seed == 21654:
-			_gen_road()
-			do_once = true
+		@warning_ignore("integer_division")
+		var half_segments = segments / 2
+		for i in range(1 , half_segments + 1):
+			var key = i + closest_idx
+			pending_nodes.append(key)
+
+		for i in range(-1 , -half_segments - 1, -1):
+			var key = i + closest_idx
+			pending_nodes.append(key)
+
+		for key in nodes.keys():
+			if not key in pending_nodes:
+				nodes.erase(key)
+
+		for key in pending_nodes:
+			if not key in nodes:
+				if key < closest_idx:
+					var prev_node_dir = nodes[key + 1]['dir']
+					var end = nodes[key + 1]['pos'] - prev_node_dir * segment_length
+					var node_dir = get_segment_dir(key+1)
+					nodes[key] = {'pos':end, 'dir':node_dir}
+					generate_segments = true
+				else:
+					var prev_node_dir = nodes[key - 1]['dir']
+					var end = nodes[key - 1]['pos'] + prev_node_dir * segment_length
+					var node_dir = get_segment_dir(key-1)
+					nodes[key] = {'pos':end, 'dir':node_dir}
+					generate_segments = true
+
+		if generate_segments:
+			for key in range(closest_idx - half_segments + 1, closest_idx + half_segments - 1):
+				if not nodes[key].has('subnodes'):
+					var subnodes = []
+					for i in range(sub_segments - 1):
+						var t = (i + 1) * 1.0 / sub_segments
+						subnodes.append(t)
+						#pos = 
+
+			print(nodes.keys(), ' ', closest_idx)
+
+
+	var transform = Transform3D(Basis(), Vector3(nodes[closest_idx]['pos'].x, 25.0, nodes[closest_idx]['pos'].y))
+	DebugDraw3D.draw_position(transform)
+
 
 func _generate_road_segment(a: Vector3, b: Vector3, c: Vector3, d: Vector3, e: Vector3):
 	var verts = PackedVector3Array()
@@ -91,11 +128,11 @@ func _generate_road_segment(a: Vector3, b: Vector3, c: Vector3, d: Vector3, e: V
 		normals.append(normal)
 		normals.append(normal)
 
+	@warning_ignore("integer_division")
 	for row in range((len(verts)-1)/2):
 		indices.append(row * 2)
 		indices.append(row * 2 + 1)
 		indices.append((row+1) * 2)
-
 
 		indices.append((row+1) * 2)
 		indices.append(row * 2 + 1)
@@ -120,13 +157,13 @@ func _generate_road_segment(a: Vector3, b: Vector3, c: Vector3, d: Vector3, e: V
 
 	var v_accum = 0.0
 	for idx in range(len(curve_points)-1):
-		var segment_length = distances[idx+1]
+		var segment_len = distances[idx+1]
 		# left vertex
 		uvs.append(Vector2(0.0, v_accum / v_total))
 		# right vertex
 		uvs.append(Vector2(1.0, v_accum / v_total))
 
-		v_accum += segment_length
+		v_accum += segment_len
 
 	var mesh = ArrayMesh.new()
 	var mesh_inst = MeshInstance3D.new()
@@ -156,6 +193,8 @@ func _generate_road_segment(a: Vector3, b: Vector3, c: Vector3, d: Vector3, e: V
 
 	$"../../World/Terrain".add_child(mesh_inst)
 
+
+
 func catmull_rom(p0: Vector3, p1: Vector3, p2: Vector3, p3: Vector3, t: float) -> Vector3:
 	var t2 = t * t
 	var t3 = t2 * t
@@ -165,3 +204,37 @@ func catmull_rom(p0: Vector3, p1: Vector3, p2: Vector3, p3: Vector3, t: float) -
 		(2.0*p0 - 5.0*p1 + 4.0*p2 - p3) * t2 +
 		(-p0 + 3.0*p1 - 3.0*p2 + p3) * t3
 	)
+
+func line_intersection(pos1: Vector2, dir1: Vector2, pos2: Vector2, dir2: Vector2) -> Vector2:
+	var cross = dir1.x * dir2.y - dir1.y * dir2.x
+	if abs(cross) < 0.00001:
+		return Vector2.INF # parallel or nearly parallel
+	
+	var diff = pos2 - pos1
+	var t = (diff.x * dir2.y - diff.y * dir2.x) / cross
+	return pos1 + dir1 * t
+
+func get_segment_dir(node: int) -> Vector2:
+	var rng = RandomNumberGenerator.new()
+	rng.seed = node + noise_seed
+	var angle_offset = deg_to_rad(rng.randfn(0.0, segment_max_degree))
+	var forward = nodes[node]['dir']
+	return forward.rotated(angle_offset).normalized()
+
+func _terrain_sample(pos: Vector2, dir: Vector2) -> Vector3:
+	var highest_sample = -INF
+	var rotated_dir = Vector2(-dir.y, dir.x)
+	var start = pos + rotated_dir * width / 2.0
+	for i in range(road_samples):
+		var step = width / (road_samples - 1)
+		var l = i * step
+		var sample_pos = start + -rotated_dir * l
+
+		var height = noise.get_noise_2d(sample_pos.x, sample_pos.y) * height_scale
+		var mountain_height = (abs(mountain_noise.get_noise_2d(sample_pos.x, sample_pos.y))**2) * mountain_height_scale
+		var total_height = height + mountain_height
+
+		if total_height > highest_sample:
+			highest_sample = total_height
+
+	return Vector3(pos.x, highest_sample, pos.y)

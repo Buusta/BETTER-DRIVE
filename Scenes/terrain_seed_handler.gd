@@ -30,5 +30,6 @@ func _ready() -> void:
 		child.mountain_frequency = mountain_frequency
 		child.mountain_frequency_scale = mountain_frequency_scale
 		child.spawn_node = spawn_node
-		
-		print(child.noise_seed)
+		child.player = player
+		if "do_once" in child:
+			child.do_once = true

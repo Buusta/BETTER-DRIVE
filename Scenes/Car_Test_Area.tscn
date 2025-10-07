@@ -1,6 +1,6 @@
 [gd_scene load_steps=8 format=3 uid="uid://bll204dhlawfo"]
 
-[ext_resource type="PackedScene" uid="uid://gl66cbv21e5f" path="res://Scenes/Car.tscn" id="1_paga4"]
+[ext_resource type="PackedScene" uid="uid://2gmi4q2iadpt" path="res://Scenes/plane.tscn" id="1_paga4"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_5vbcq"]
 sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
@@ -16,7 +16,7 @@ tonemap_mode = 2
 glow_enabled = true
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_0wy5w"]
-size = Vector2(200, 200)
+size = Vector2(2000, 2000)
 
 [sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_paga4"]
 
@@ -35,11 +35,6 @@ shadow_enabled = true
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 mesh = SubResource("PlaneMesh_0wy5w")
 
-[node name="Car" parent="." instance=ExtResource("1_paga4")]
-transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 78.7818, 1.2995775, 0.6584997)
-freeze = true
-accel = 1200.0
-
 [node name="StaticBody3D" type="StaticBody3D" parent="."]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D"]
@@ -48,3 +43,13 @@ shape = SubResource("WorldBoundaryShape3D_paga4")
 [node name="MeshInstance3D2" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 25, 0)
 mesh = SubResource("CylinderMesh_paga4")
+
+[node name="RigidBody3D" parent="." instance=ExtResource("1_paga4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 33.60036, 0.5, -31.430157)
+engine_power = 250.0
+drag_coefficient = 0.2
+pitch_power = 5.0
+roll_power = 5.0
+
+[node name="Camera3D" type="Camera3D" parent="RigidBody3D"]
+transform = Transform3D(-1, 0, -8.742278e-08, -1.9264217e-08, 0.97541934, 0.22035697, 8.527386e-08, 0.22035697, -0.97541934, 0, 1.415714, -5.5919647)

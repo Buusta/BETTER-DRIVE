@@ -1,0 +1,19 @@
+[gd_scene load_steps=4 format=3 uid="uid://2gmi4q2iadpt"]
+
+[ext_resource type="Script" uid="uid://d0sr02h6hl5cu" path="res://plane.gd" id="1_s46f0"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_r8t2q"]
+size = Vector3(1, 1, 4.355)
+
+[sub_resource type="BoxMesh" id="BoxMesh_r8t2q"]
+size = Vector3(1, 1, 4.355)
+
+[node name="RigidBody3D" type="RigidBody3D"]
+mass = 10.0
+script = ExtResource("1_s46f0")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_r8t2q")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_r8t2q")

@@ -5,9 +5,9 @@
 [ext_resource type="Script" uid="uid://cbbucwmb1kua1" path="res://Scripts/terrain_spawner.gd" id="3_h2yge"]
 [ext_resource type="Script" uid="uid://0ticgkiahhqp" path="res://Scenes/terrain_seed_handler.gd" id="3_kry3j"]
 [ext_resource type="PackedScene" uid="uid://cl32v8luarx6x" path="res://Scenes/UI.tscn" id="4_jjvhh"]
+[ext_resource type="PackedScene" uid="uid://gl66cbv21e5f" path="res://Scenes/Car.tscn" id="4_kry3j"]
 [ext_resource type="Script" uid="uid://ggo8wgqyam0l" path="res://Scripts/generate_road.gd" id="6_6bp64"]
 [ext_resource type="Shader" uid="uid://dvlwik8bomsr0" path="res://Assets/Road.tres" id="7_344ge"]
-[ext_resource type="PackedScene" uid="uid://gl66cbv21e5f" path="res://Scenes/Car.tscn" id="8_344ge"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_a202f"]
 sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
@@ -34,7 +34,7 @@ volumetric_fog_density = 0.0025
 
 [node name="Root" type="Node3D" node_paths=PackedStringArray("player", "world", "terrain_handler")]
 script = ExtResource("1_21xkr")
-player = NodePath("Car")
+player = NodePath("World/Car")
 world = NodePath("World")
 terrain_handler = NodePath("TerrainHandler")
 
@@ -46,11 +46,11 @@ transform = Transform3D(-0.8660254, -0.43301278, 0.24999999, -0.3669776, 0.89006
 shadow_enabled = true
 
 [node name="UI" parent="." node_paths=PackedStringArray("car") instance=ExtResource("4_jjvhh")]
-car = NodePath("../Car")
+car = NodePath("../World/Car")
 
 [node name="TerrainHandler" type="Node" parent="." node_paths=PackedStringArray("player", "spawn_node")]
 script = ExtResource("3_kry3j")
-player = NodePath("../Car")
+player = NodePath("../World/Car")
 octaves = 14
 height_scale = 250.0
 frequency = 0.1
@@ -60,9 +60,9 @@ mountain_frequency = 0.02
 mountain_frequency_scale = 2000
 spawn_node = NodePath("../World/Terrain")
 
-[node name="FarTerrain" type="Node" parent="TerrainHandler" node_paths=PackedStringArray("player", "spawn_node")]
+[node name="FarTerrain" type="Node" parent="TerrainHandler" node_paths=PackedStringArray("player")]
 script = ExtResource("3_h2yge")
-player = NodePath("../../Car")
+player = NodePath("../../World/Car")
 chunk_size = 2048
 render_distance = 32
 yoffset = -5.0
@@ -74,11 +74,10 @@ mountain_height_scale = 5000
 mountain_frequency = 0.02
 mountain_frequency_scale = 2000
 terrain_shader = ExtResource("2_8gbba")
-spawn_node = NodePath("../../World/Terrain")
 
-[node name="NearTerrain" type="Node" parent="TerrainHandler" node_paths=PackedStringArray("player", "spawn_node")]
+[node name="NearTerrain" type="Node" parent="TerrainHandler" node_paths=PackedStringArray("player")]
 script = ExtResource("3_h2yge")
-player = NodePath("../../Car")
+player = NodePath("../../World/Car")
 chunk_size = 64
 render_distance = 10
 generate_collision = true
@@ -90,16 +89,25 @@ mountain_height_scale = 5000
 mountain_frequency = 0.02
 mountain_frequency_scale = 2000
 terrain_shader = ExtResource("2_8gbba")
-spawn_node = NodePath("../../World/Terrain")
 
 [node name="GenerateRoad" type="Node" parent="TerrainHandler"]
 script = ExtResource("6_6bp64")
+octaves = null
+height_scale = null
+frequency = null
+frequency_scale = null
+mountain_octaves = null
+mountain_height_scale = null
+mountain_frequency = null
+mountain_frequency_scale = null
+noise_seed = null
 road_shader = ExtResource("7_344ge")
+width = null
 
 [node name="World" type="Node3D" parent="."]
 
-[node name="Terrain" type="Node3D" parent="World"]
+[node name="Car" parent="World" instance=ExtResource("4_kry3j")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 25, -11.505)
+accel = 3200.0
 
-[node name="Car" parent="." instance=ExtResource("8_344ge")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 43, 67, -5)
-accel = 2400.0
+[node name="Terrain" type="Node3D" parent="World"]

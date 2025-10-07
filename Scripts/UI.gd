@@ -35,6 +35,7 @@ func _process(delta: float) -> void:
 	$Time.text = time
 
 	# Add delta to frametimes
+
 	if frametimes.size() < max_frametimes:
 		frametimes.append(delta)
 	else:

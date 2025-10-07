@@ -29,7 +29,7 @@ var new_chunks := {} # key = Vector2i position (chunk_pos), vals = Distance
 var generating_chunks := {} # key = Vector2i position (chunk_pos), vals = true
 var pending_chunks = [] # vals = mesh_arrays, collision, Vector2i position (chunk_pos), distance
 
-var spawn_node: Node3D # the node the terrain should spawn under
+@export var spawn_node: Node3D # the node the terrain should spawn under
 
 var task_ids = [] # all WorkerThreadPool tasks that need to be completed.
 
