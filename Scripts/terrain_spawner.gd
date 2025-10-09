@@ -20,7 +20,7 @@ extends Node
 @export var chunks_per_frame_target := 3 # how many chunk meshes can be generated and added as child per frame. helps with performance
 @export var terrain_shader: VisualShader # terrain shader
 
-var noise_seed = 21654
+var noise_seed = 69
 
 var prev_player_chunk: Vector2i # the chunk the player was in last frame
 
@@ -38,6 +38,7 @@ var target_chunks_per_frame := false
 
 func _ready() -> void:
 	_add_new_chunks(Vector2(player.position.x, player.position.z), render_distance)
+	print(noise_seed)
 
 func _process(_delta: float) -> void:
 	# make the first 10s of terrain generation fast, then slow down

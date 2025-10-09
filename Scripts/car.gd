@@ -18,6 +18,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		if mouse_captured:
 			springarm.rotation.y -= event.relative.x * mouse_sensitivity
 			springarm.rotation.x -= event.relative.y * mouse_sensitivity
+			springarm.rotation.x = clamp(springarm.rotation.x, -1.5, 1.5)
 
 	if event.is_action_pressed("move_forward"):
 		motor_input = 1
