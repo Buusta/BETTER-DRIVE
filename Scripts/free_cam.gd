@@ -17,6 +17,9 @@ var move_speed = 10.0
 func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	move_speed = speed
+	
+	#var viewport := get_viewport()
+	#viewport.debug_draw = Viewport.DEBUG_DRAW_WIREFRAME
 
 func _unhandled_input(event):
 	if event is InputEventMouseMotion and mouse_captured:

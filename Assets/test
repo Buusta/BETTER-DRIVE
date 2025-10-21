@@ -1,0 +1,8 @@
+Resource Path,Type,Format,Usage
+,Mesh,262144 Vertices,4.99 MiB
+Render Target (Internal),Texture2D,1152x648 RGB8,2.13 MiB
+Render Target (Internal),Texture2D,1152x648 RGB8,2.13 MiB
+,Texture2D,800x6 RGBA8,18.75 KiB
+,Mesh,24 Vertices,288 B
+,Mesh,24 Vertices,288 B
+,Texture2D,2x2 RGBA8,16 B

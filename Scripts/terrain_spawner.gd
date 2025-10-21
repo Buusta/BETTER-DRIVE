@@ -72,6 +72,9 @@ func _process(_delta: float) -> void:
 
 	# if there are chunks that are ready to be added, do it per "chunks_per_frame" amount of times
 	if pending_chunks.size() > 0:
+		
+
+		
 		for i in range(min(chunks_per_frame, pending_chunks.size())): # takes the min between the len and the max amount of "chunks_per_frame"
 			var chunk = pending_chunks.pop_front() # vals = mesh_arrays, collision, Vector2i position (chunk_pos), distance
 			var mesh_array = chunk[0]
@@ -83,7 +86,7 @@ func _process(_delta: float) -> void:
 				chunks[chunk_pos]["mesh"].queue_free()
 				# Remove the dictionary entry
 				chunks.erase(chunk_pos) 
-
+			
 			var mesh = ArrayMesh.new()
 			var mesh_inst = MeshInstance3D.new()
 			mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, mesh_array)
@@ -93,13 +96,14 @@ func _process(_delta: float) -> void:
 			mat.shader = terrain_shader
 			mesh_inst.material_override = mat
 
-			if lod <= 2:
+			if lod == 1 and generate_collision:
 				var static_body = StaticBody3D.new()
 				static_body.add_child(collision)
 				mesh_inst.add_child(static_body)
 
 			var offset = Vector3(chunk_pos.x * chunk_size, yoffset, chunk_pos.y * chunk_size)
 			mesh_inst.transform.origin = offset
+
 			spawn_node.add_child(mesh_inst)
 
 			chunks[chunk_pos] = {

@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://bbgd28xqfncis"]
+
+[ext_resource type="Script" uid="uid://bm6x3tgq3jdcg" path="res://Scripts/NewTerrain/terrain_spawner.gd" id="1_hjac3"]
+
+[node name="Node3D" type="Node3D"]
+
+[node name="TerrainHandler" type="Node" parent="."]
+script = ExtResource("1_hjac3")
