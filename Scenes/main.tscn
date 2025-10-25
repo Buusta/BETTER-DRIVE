@@ -2,10 +2,10 @@
 
 [ext_resource type="Script" uid="uid://pi7bgsjcwxt" path="res://Scripts/floating_origin.gd" id="1_21xkr"]
 [ext_resource type="Shader" uid="uid://qogiayfdhdbe" path="res://Assets/Ground.tres" id="2_8gbba"]
-[ext_resource type="Script" uid="uid://cbbucwmb1kua1" path="res://Scripts/terrain_spawner.gd" id="3_h2yge"]
+[ext_resource type="Script" uid="uid://cbbucwmb1kua1" path="res://Scripts/Terrain OLD/terrain_spawner.gd" id="3_h2yge"]
 [ext_resource type="Script" uid="uid://0ticgkiahhqp" path="res://Scenes/terrain_seed_handler.gd" id="3_kry3j"]
 [ext_resource type="PackedScene" uid="uid://cl32v8luarx6x" path="res://Scenes/UI.tscn" id="4_jjvhh"]
-[ext_resource type="Script" uid="uid://ggo8wgqyam0l" path="res://Scripts/generate_road.gd" id="6_6bp64"]
+[ext_resource type="Script" uid="uid://ggo8wgqyam0l" path="res://Scripts/Terrain OLD/generate_road.gd" id="6_6bp64"]
 [ext_resource type="Shader" uid="uid://dvlwik8bomsr0" path="res://Assets/Road.tres" id="7_344ge"]
 [ext_resource type="PackedScene" uid="uid://gl66cbv21e5f" path="res://Scenes/Car.tscn" id="8_344ge"]
 

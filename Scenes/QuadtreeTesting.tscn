@@ -1,0 +1,39 @@
+[gd_scene load_steps=7 format=3 uid="uid://ciajvekqgygrb"]
+
+[ext_resource type="Script" uid="uid://brk0353csv3nc" path="res://Scripts/Terrain/world_handler.gd" id="1_3w4ka"]
+[ext_resource type="Script" uid="uid://bf2phy1pc836w" path="res://Scripts/Terrain/quadtree_terrain.gd" id="2_sy7ev"]
+[ext_resource type="Script" uid="uid://b37ke4tiho22m" path="res://Scripts/Player/free_cam.gd" id="3_sy7ev"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_ur6qi"]
+sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
+ground_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
+
+[sub_resource type="Sky" id="Sky_4jhlj"]
+sky_material = SubResource("ProceduralSkyMaterial_ur6qi")
+
+[sub_resource type="Environment" id="Environment_8q4p0"]
+background_mode = 2
+sky = SubResource("Sky_4jhlj")
+tonemap_mode = 2
+glow_enabled = true
+
+[node name="Root" type="Node"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_8q4p0")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.8660254, -0.43301278, 0.25, 0, 0.49999997, 0.86602545, -0.50000006, 0.75, -0.43301266, 0, 0, 0)
+shadow_enabled = true
+
+[node name="World Handler" type="Node" parent="." node_paths=PackedStringArray("player")]
+script = ExtResource("1_3w4ka")
+player = NodePath("../World/Camera3D")
+
+[node name="Quadtree Terrain" type="Node" parent="World Handler"]
+script = ExtResource("2_sy7ev")
+
+[node name="World" type="Node3D" parent="."]
+
+[node name="Camera3D" type="Camera3D" parent="World"]
+script = ExtResource("3_sy7ev")

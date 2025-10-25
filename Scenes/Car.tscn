@@ -1,7 +1,7 @@
 [gd_scene load_steps=9 format=4 uid="uid://gl66cbv21e5f"]
 
 [ext_resource type="PackedScene" uid="uid://bpk6sxin7xl47" path="res://Assets/CarBody.glb" id="1_1k6jk"]
-[ext_resource type="Script" uid="uid://cehhidk6adjsc" path="res://Scripts/car.gd" id="1_y2uan"]
+[ext_resource type="Script" uid="uid://cehhidk6adjsc" path="res://Scripts/Player/car.gd" id="1_y2uan"]
 [ext_resource type="Script" uid="uid://dc3arp05xnp60" path="res://Scenes/raycast_wheel.gd" id="3_jbim0"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1k6jk"]

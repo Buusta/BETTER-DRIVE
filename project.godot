@@ -12,13 +12,18 @@ config_version=5
 
 config/name="THE BETTER DRIVE"
 config/version="0.1"
-run/main_scene="uid://dcuef1fiebl1h"
+run/main_scene="uid://ciajvekqgygrb"
 config/features=PackedStringArray("4.5", "Forward Plus")
 config/icon="res://icon.svg"
 
 [debug_draw_3d]
 
 settings/addon_root_folder="res://addons/debug_draw_3d"
+
+[display]
+
+window/size/viewport_width=2560
+window/size/viewport_height=1440
 
 [input]
 
