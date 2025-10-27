@@ -13,26 +13,27 @@ extends Node
 
 # vars
 var min_chunk_size : int = max_chunk_size / 2**chunk_levels
-var previous_chunk : Vector2i
+var previous_position: Vector2
 
 var Quadtree = {}
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-	update_quadtree(player.position)
+	var player_pos2d = Vector2(player.position.x, player.position.z)
+	update_quadtree(player_pos2d)
 
 	pass # Replace with function body.
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta: float) -> void:
-	var chunk_pos = Vector2i(floor(player.position.x / max_chunk_size), floor(player.position.z / max_chunk_size))
-	if not chunk_pos == previous_chunk:
-		update_quadtree(player.position)
-		previous_chunk = chunk_pos
+	var player_pos2d = Vector2(player.position.x, player.position.z)
+	if not chebyshev_distance_check(player_pos2d, previous_position, min_chunk_size):
+		update_quadtree(player_pos2d)
+		previous_position = player_pos2d
 
 # returns a list of root_chunks that surround the player
 func generate_root_chunks(pos):
-	var chunk_pos = Vector2i(floor(pos.x / max_chunk_size), floor(pos.z / max_chunk_size))
+	var chunk_pos = Vector2i(floor(pos.x / max_chunk_size), floor(pos.y / max_chunk_size))
 
 	var chunks = []
 
@@ -43,12 +44,11 @@ func generate_root_chunks(pos):
 	return chunks
 
 # returns a full tree that surround the player
-func generate_quadtree(pos: Vector3, tree_keys: Array):
+func generate_quadtree(pos: Vector2, tree_keys: Array):
 	var new_Quadtree = {}
-	var pos2d = Vector2(pos.x, pos.z)
 	
 	for root_chunk in tree_keys:
-		if not chebyshev_distance_check(pos2d, Vector2(root_chunk) * max_chunk_size, max_chunk_size):
+		if not chebyshev_distance_check(pos, Vector2(root_chunk) * max_chunk_size, max_chunk_size):
 			var chunk = Chunk.new()
 			chunk.position = root_chunk
 			chunk.size = max_chunk_size
@@ -58,8 +58,8 @@ func generate_quadtree(pos: Vector3, tree_keys: Array):
 	print(new_Quadtree)
 	print('\n')
 
-# idk yet
-func update_quadtree(pos):
+# update the quadtree
+func update_quadtree(pos: Vector2):
 	var root_chunks = generate_root_chunks(pos)
 
 	if not Quadtree.keys() == root_chunks:
