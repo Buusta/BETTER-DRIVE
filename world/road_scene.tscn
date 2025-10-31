@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://qpn2w36i48xc"]
+
+[ext_resource type="Script" uid="uid://ggo8wgqyam0l" path="res://world/Terrain OLD/generate_road.gd" id="1_iv3l3"]
+
+[node name="Road" type="Node"]
+script = ExtResource("1_iv3l3")

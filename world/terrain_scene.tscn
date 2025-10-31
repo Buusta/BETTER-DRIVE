@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://es1c8dfjw0ki"]
+
+[ext_resource type="Script" uid="uid://cbbucwmb1kua1" path="res://world/Terrain OLD/terrain_spawner.gd" id="1_rqa7o"]
+
+[node name="Terrain" type="Node"]
+script = ExtResource("1_rqa7o")

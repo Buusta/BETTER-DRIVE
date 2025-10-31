@@ -1,0 +1,119 @@
+[gd_scene load_steps=16 format=3 uid="uid://df2howh1xc4xu"]
+
+[ext_resource type="Script" uid="uid://cmi4mij3tuwvj" path="res://player/player_body.gd" id="1_aplnl"]
+[ext_resource type="PackedScene" uid="uid://bxi52rdqnhb15" path="res://Scenes/UI/player_ui.tscn" id="2_ft82r"]
+[ext_resource type="Shader" uid="uid://bji68a7tsb6i4" path="res://Scenes/Player/picture_camera_pp.gdshader" id="2_v8jfa"]
+[ext_resource type="Shader" uid="uid://bqtwrfpibbw87" path="res://Scenes/Player/pic_cam_black_shader.gdshader" id="3_3305p"]
+[ext_resource type="Script" uid="uid://c1wfgmmatyufm" path="res://Scenes/Player/picture_camera_pp.gd" id="3_enob1"]
+[ext_resource type="Script" uid="uid://c828y6offturu" path="res://components/input_component.gd" id="6_pvmx2"]
+[ext_resource type="Script" uid="uid://5e7yjtyrtrni" path="res://components/interact_component.gd" id="7_g0ebe"]
+[ext_resource type="Script" uid="uid://b7ir1iqmwfegc" path="res://player/movement_component.gd" id="8_pwlsx"]
+[ext_resource type="Script" uid="uid://oxcwvwkyily0" path="res://components/focus_component.gd" id="9_nempf"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_aplnl"]
+radius = 0.35
+height = 1.8
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_aplnl"]
+radius = 0.35
+height = 1.8
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_3305p"]
+render_priority = 0
+shader = ExtResource("2_v8jfa")
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_enob1"]
+orientation = 2
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_enob1"]
+render_priority = 0
+shader = ExtResource("3_3305p")
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_pwlsx"]
+radius = 0.35
+
+[node name="PlayerBody" type="RigidBody3D"]
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+axis_lock_angular_z = true
+script = ExtResource("1_aplnl")
+
+[node name="PlayerShape" type="CollisionShape3D" parent="."]
+shape = SubResource("CapsuleShape3D_aplnl")
+
+[node name="PlayerMesh" type="MeshInstance3D" parent="."]
+mesh = SubResource("CapsuleMesh_aplnl")
+
+[node name="SpringArm3D" type="SpringArm3D" parent="."]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0.6649871, 0)
+collision_mask = 0
+spring_length = 0.0
+
+[node name="ViewportCamera" type="Camera3D" parent="SpringArm3D"]
+cull_mask = 1048063
+current = true
+fov = 85.0
+far = 150000.0
+
+[node name="InteractRay" type="RayCast3D" parent="SpringArm3D"]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0)
+target_position = Vector3(0, -1.3, 0)
+collision_mask = 4
+
+[node name="subcam" type="Node3D" parent="SpringArm3D"]
+
+[node name="CameraRenderer" type="SubViewport" parent="SpringArm3D/subcam"]
+size = Vector2i(1280, 720)
+render_target_update_mode = 0
+
+[node name="PictureCamera" type="Camera3D" parent="SpringArm3D/subcam/CameraRenderer"]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0.6649871, 0)
+cull_mask = 513
+fov = 5.0
+
+[node name="PictureCameraPP" type="MeshInstance3D" parent="SpringArm3D/subcam/CameraRenderer/PictureCamera"]
+visible = false
+layers = 512
+material_override = SubResource("ShaderMaterial_3305p")
+cast_shadow = 0
+mesh = SubResource("PlaneMesh_enob1")
+script = ExtResource("3_enob1")
+
+[node name="PictureCameraPP2" type="MeshInstance3D" parent="SpringArm3D/subcam/CameraRenderer/PictureCamera"]
+visible = false
+layers = 512
+sorting_offset = 0.135
+material_override = SubResource("ShaderMaterial_enob1")
+cast_shadow = 0
+mesh = SubResource("PlaneMesh_enob1")
+skeleton = NodePath("../PictureCameraPP")
+script = ExtResource("3_enob1")
+
+[node name="GroundShapeCast" type="ShapeCast3D" parent="."]
+shape = SubResource("SphereShape3D_pwlsx")
+target_position = Vector3(0, -0.57, 0)
+
+[node name="CanvasLayer" parent="." instance=ExtResource("2_ft82r")]
+
+[node name="InputComponent" type="Node" parent="."]
+script = ExtResource("6_pvmx2")
+
+[node name="InteractionComponent" type="Node" parent="." node_paths=PackedStringArray("interact_ray")]
+script = ExtResource("7_g0ebe")
+interact_ray = NodePath("../SpringArm3D/InteractRay")
+
+[node name="MovementComponent" type="Node" parent="." node_paths=PackedStringArray("movable", "input_component", "camera_arm", "ground_shape_cast")]
+script = ExtResource("8_pwlsx")
+movable = NodePath("..")
+input_component = NodePath("../InputComponent")
+camera_arm = NodePath("../SpringArm3D")
+ground_shape_cast = NodePath("../GroundShapeCast")
+
+[node name="FocusComponent" type="Node" parent="."]
+script = ExtResource("9_nempf")
+
+[connection signal="click_l" from="InputComponent" to="." method="_take_picture"]
+[connection signal="interact" from="InputComponent" to="InteractionComponent" method="_on_input_component_interact"]
+[connection signal="jump" from="InputComponent" to="MovementComponent" method="jump"]
+[connection signal="mouse_input" from="InputComponent" to="MovementComponent" method="_rotate_camera"]
+[connection signal="capture_mouse" from="FocusComponent" to="InputComponent" method="capture_mouse"]

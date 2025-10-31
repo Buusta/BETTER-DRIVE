@@ -1,0 +1,94 @@
+[gd_resource type="VisualShader" load_steps=7 format=3 uid="uid://ee7efjjs3y2k"]
+
+[sub_resource type="VisualShaderNodeColorParameter" id="VisualShaderNodeColorParameter_d34ru"]
+parameter_name = "ColorParameter"
+default_value_enabled = true
+default_value = Color(0.7392, 0.84, 0.82991993, 1)
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_rngys"]
+parameter_name = "Metallic"
+default_value_enabled = true
+default_value = 0.3
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_ht0mh"]
+parameter_name = "Roughness"
+default_value_enabled = true
+default_value = 0.2
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_lrbbb"]
+parameter_name = "Specular"
+default_value_enabled = true
+default_value = 0.8
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_cbgmc"]
+parameter_name = "ClearCoat"
+default_value_enabled = true
+default_value = 1.0
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_ntn5l"]
+parameter_name = "ClearCoatRoughness"
+default_value_enabled = true
+default_value = 0.5
+
+[resource]
+code = "shader_type spatial;
+render_mode blend_mix, depth_draw_opaque, depth_test_default, cull_back, diffuse_lambert, specular_schlick_ggx;
+
+uniform vec4 ColorParameter : source_color = vec4(0.739200, 0.840000, 0.829920, 1.000000);
+uniform float Metallic = 0.30000001192093;
+uniform float Roughness = 0.20000000298023;
+uniform float Specular = 0.80000001192093;
+uniform float ClearCoat = 1.0;
+uniform float ClearCoatRoughness = 0.5;
+
+
+
+void fragment() {
+// ColorParameter:2
+	vec4 n_out2p0 = ColorParameter;
+
+
+// FloatParameter:3
+	float n_out3p0 = Metallic;
+
+
+// FloatParameter:4
+	float n_out4p0 = Roughness;
+
+
+// FloatParameter:5
+	float n_out5p0 = Specular;
+
+
+// FloatParameter:6
+	float n_out6p0 = ClearCoat;
+
+
+// FloatParameter:7
+	float n_out7p0 = ClearCoatRoughness;
+
+
+// Output:0
+	ALBEDO = vec3(n_out2p0.xyz);
+	METALLIC = n_out3p0;
+	ROUGHNESS = n_out4p0;
+	SPECULAR = n_out5p0;
+	CLEARCOAT = n_out6p0;
+	CLEARCOAT_ROUGHNESS = n_out7p0;
+
+
+}
+"
+nodes/fragment/2/node = SubResource("VisualShaderNodeColorParameter_d34ru")
+nodes/fragment/2/position = Vector2(-620, -80)
+nodes/fragment/3/node = SubResource("VisualShaderNodeFloatParameter_rngys")
+nodes/fragment/3/position = Vector2(-1220, 400)
+nodes/fragment/4/node = SubResource("VisualShaderNodeFloatParameter_ht0mh")
+nodes/fragment/4/position = Vector2(-2080, 580)
+nodes/fragment/5/node = SubResource("VisualShaderNodeFloatParameter_lrbbb")
+nodes/fragment/5/position = Vector2(-2100, 1040)
+nodes/fragment/6/node = SubResource("VisualShaderNodeFloatParameter_cbgmc")
+nodes/fragment/6/position = Vector2(-680, 900)
+nodes/fragment/7/node = SubResource("VisualShaderNodeFloatParameter_ntn5l")
+nodes/fragment/7/position = Vector2(-700, 1340)
+nodes/fragment/connections = PackedInt32Array(2, 0, 0, 0, 3, 0, 0, 2, 4, 0, 0, 3, 5, 0, 0, 4, 6, 0, 0, 13, 7, 0, 0, 14)

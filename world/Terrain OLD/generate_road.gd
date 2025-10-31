@@ -1,29 +1,8 @@
 extends Node
 
-@export var octaves := 14 # how detailed the noise is
-@export var height_scale := 25.0 # how much the terrain will be scaled along the y axis
-@export var frequency := 0.5 # how big the noise is
-@export var frequency_scale := 250.0 # scales the frequency (divides)
-@export var mountain_octaves := 4
-@export var mountain_height_scale := 100
-@export var mountain_frequency := 0.5
-@export var mountain_frequency_scale := 250
-var noise_seed = 69
-@export var road_shader: VisualShader
-
-@export var segments = 20
-@export var sub_segments = 50
-@export var segment_length = 1000
-@export var segment_max_degree = 5
-@export var player: Node3D
-
-var do_once = false
-
-@export var resolution = 10
-@export var road_samples = 10
-@export var road_height_epsilon = -.1
-@export var width = 5.0
-var spawn_node: Node3D
+var Road: RoadData
+var Noises: NoiseData
+var References: ReferenceData
 
 var init_dir = Vector2(2 * randf() - 1, 2 * randf() - 1)
 var nodes = { 0:{'pos':Vector3(0.0, 0.0, 0.0),
@@ -32,35 +11,41 @@ var nodes = { 0:{'pos':Vector3(0.0, 0.0, 0.0),
 var noise = FastNoiseLite.new()
 var mountain_noise = FastNoiseLite.new()
 
+var active_meshes: Array = []
+
+func set_data(road_data: RoadData, noise_data: NoiseData, reference_data: ReferenceData):
+	Road = road_data
+	Noises = noise_data
+	References = reference_data
+
+
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
 
-	noise.seed = noise_seed
-	noise.frequency = frequency / frequency_scale
-	noise.fractal_octaves = octaves
+	noise.seed = Noises.noise_seed
+	noise.frequency = Noises.frequency / Noises.frequency_scale
+	noise.fractal_octaves = Noises.octaves
 
 	mountain_noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
-	mountain_noise.seed = noise_seed
-	mountain_noise.frequency = mountain_frequency / mountain_frequency_scale
-	print(noise.seed)
-
+	mountain_noise.seed = Noises.noise_seed
+	mountain_noise.frequency = Noises.mountain_frequency / Noises.mountain_frequency_scale
+	mountain_noise.fractal_octaves = Noises.mountain_octaves
 
 func _process(_delta: float) -> void:
 	var closest_idx = 0
 	var closest_dist = INF
 	var pending_nodes = []
 	var generate_segments = false
-	
 
 	for key in nodes.keys():
-		if (nodes[key]['pos'] - player.position).length() < closest_dist:
+		if (nodes[key]['pos'] - References.player.position).length() < closest_dist:
 			closest_idx = key
-			closest_dist = (nodes[key]['pos'] - player.position).length()
+			closest_dist = (nodes[key]['pos'] - References.player.position).length()
 	pending_nodes.append(closest_idx)
-	
+
 	@warning_ignore("integer_division")
-	var half_segments = segments / 2
+	var half_segments = Road.segments / 2
 	for i in range(1 , half_segments + 1):
 		var key = i + closest_idx
 		pending_nodes.append(key)
@@ -69,16 +54,21 @@ func _process(_delta: float) -> void:
 		var key = i + closest_idx
 		pending_nodes.append(key)
 
-	for key in nodes.keys():
-		if not key in pending_nodes:
-			nodes.erase(key)
+	#for key in nodes.keys():
+		#if not key in pending_nodes:
+#
+			#if nodes[key].has('meshes'):
+				#for mesh in nodes[key]['meshes']:
+					#if mesh != null:
+						#mesh.queue_free()
+
 
 	for key in pending_nodes:
 		if not key in nodes:
 			if key < closest_idx:
 				var prev_node_dir = nodes[key + 1]['dir']
 				var prev_node_pos = nodes[key + 1]['pos']
-				var end = Vector2(prev_node_pos.x, prev_node_pos.z) - prev_node_dir * segment_length
+				var end = Vector2(prev_node_pos.x, prev_node_pos.z) - prev_node_dir * Road.segment_length
 				var node_dir = get_segment_dir(key+1)
 				var end3d = _terrain_sample(end, node_dir)
 				nodes[key] = {'pos':end3d, 'dir':node_dir}
@@ -86,7 +76,7 @@ func _process(_delta: float) -> void:
 			else:
 				var prev_node_dir = nodes[key - 1]['dir']
 				var prev_node_pos = nodes[key - 1]['pos']
-				var end = Vector2(prev_node_pos.x, prev_node_pos.z) + prev_node_dir * segment_length
+				var end = Vector2(prev_node_pos.x, prev_node_pos.z) + prev_node_dir * Road.segment_length
 				var node_dir = get_segment_dir(key-1)
 				var end3d = _terrain_sample(end, node_dir)
 				nodes[key] = {'pos':end3d, 'dir':node_dir}
@@ -97,18 +87,17 @@ func _process(_delta: float) -> void:
 		for key in range(closest_idx - half_segments + 1, closest_idx + half_segments - 1):
 			if not nodes[key].has('subnodes'):
 				var subnodes = []
-				for i in range(sub_segments - 1):
-					var t = (i + 1) * 1.0 / sub_segments
+				for i in range(Road.sub_segments - 1):
+					var t = (i + 1) * 1.0 / Road.sub_segments
 					var pos = catmull_rom(nodes[key-1]['pos'], nodes[key]['pos'], nodes[key+1]['pos'], nodes[key+2]['pos'], t)
 					subnodes.append(pos)
 				nodes[key]['subnodes'] = subnodes
-
 
 		for key in range(closest_idx - half_segments + 1, closest_idx + half_segments - 1):
 			if nodes[key].has('subnodes'):
 				for subnode in range(len(nodes[key]['subnodes'])):
 					var pos = nodes[key]['subnodes'][subnode]
-					if subnode == sub_segments-2:
+					if subnode == Road.sub_segments-2:
 						var dir = nodes[key+1]['pos'] - pos
 						dir = Vector2(dir.x, dir.z)
 					else:
@@ -121,21 +110,27 @@ func _process(_delta: float) -> void:
 			if not nodes[key].has('mesh'):
 				var segment_nodes = []
 				
-				segment_nodes.append(nodes[key-1]['subnodes'][sub_segments-2])
+				segment_nodes.append(nodes[key-1]['subnodes'][Road.sub_segments-2])
 				segment_nodes.append(nodes[key]['pos'])
 
-				for node in range(sub_segments -1):
+				for node in range(Road.sub_segments -1):
 					segment_nodes.append(nodes[key]['subnodes'][node])
 
 				segment_nodes.append(nodes[key+1]['pos'])
 				segment_nodes.append(nodes[key+1]['subnodes'][0])
 				segment_nodes.append(nodes[key+1]['subnodes'][1])
-				
-				#print(len(segment_nodes)-3)
-				
-				for node in range(len(segment_nodes)-4):
-					_generate_road_segment(segment_nodes[node], segment_nodes[node+1], segment_nodes[node+2], segment_nodes[node+3], segment_nodes[node+4])
 
+				nodes[key]['meshes'] = []
+				for node in range(len(segment_nodes)-4):
+					var mesh_inst = _generate_road_segment(segment_nodes[node], segment_nodes[node+1], segment_nodes[node+2], segment_nodes[node+3], segment_nodes[node+4])
+					$"../../World/Terrain".add_child(mesh_inst)
+					active_meshes.append(mesh_inst)
+
+				if active_meshes.size() > Road.segments * Road.sub_segments:
+					while active_meshes.size() > Road.segments * Road.sub_segments:
+						var old_mesh = active_meshes.pop_front()
+						if old_mesh != null:
+							old_mesh.queue_free()
 
 func _generate_road_segment(a: Vector3, b: Vector3, c: Vector3, d: Vector3, e: Vector3):
 	var verts = PackedVector3Array()
@@ -147,19 +142,19 @@ func _generate_road_segment(a: Vector3, b: Vector3, c: Vector3, d: Vector3, e: V
 	# generate curve points
 	var curve_points: Array[Vector3]
 	curve_points.append(b)
-	for seg in range(resolution - 1):
-		var t = (seg+1.0) / float(resolution)
+	for seg in range(Road.resolution - 1):
+		var t = (seg+1.0) / float(Road.resolution)
 		curve_points.append(catmull_rom(a, b, c, d, t))
 	curve_points.append(c)
-	curve_points.append(catmull_rom(b, c, d, e, (1.0 / resolution)))
+	curve_points.append(catmull_rom(b, c, d, e, (1.0 / Road.resolution)))
 
 	# generate road points
 	for idx in range(len(curve_points)-1):
 		var forwdir = (curve_points[idx+1] - curve_points[idx]).normalized()
 		var rightdir = forwdir.cross(Vector3.UP).normalized()
 		var normal = rightdir.cross(forwdir).normalized()
-		verts.append(curve_points[idx] + rightdir * width)
-		verts.append(curve_points[idx] + -rightdir * width)
+		verts.append(curve_points[idx] + rightdir * Road.width)
+		verts.append(curve_points[idx] + -rightdir * Road.width)
 
 		normals.append(normal)
 		normals.append(normal)
@@ -224,10 +219,10 @@ func _generate_road_segment(a: Vector3, b: Vector3, c: Vector3, d: Vector3, e: V
 	mesh_inst.add_child(static_body)
 
 	var mat = ShaderMaterial.new()
-	mat.shader = road_shader
+	mat.shader = Road.road_shader
 	mesh_inst.material_override = mat
 
-	$"../../World/Terrain".add_child(mesh_inst)
+	return mesh_inst
 
 func catmull_rom(p0: Vector3, p1: Vector3, p2: Vector3, p3: Vector3, t: float) -> Vector3:
 	var t2 = t * t
@@ -250,22 +245,22 @@ func line_intersection(pos1: Vector2, dir1: Vector2, pos2: Vector2, dir2: Vector
 
 func get_segment_dir(node: int) -> Vector2:
 	var rng = RandomNumberGenerator.new()
-	rng.seed = node + noise_seed
-	var angle_offset = deg_to_rad(rng.randfn(0.0, segment_max_degree))
+	rng.seed = node + Noises.noise_seed
+	var angle_offset = deg_to_rad(rng.randfn(0.0, Road.segment_max_degree))
 	var forward = nodes[node]['dir']
 	return forward.rotated(angle_offset).normalized()
 
 func _terrain_sample(pos: Vector2, dir: Vector2) -> Vector3:
 	var highest_sample = -INF
 	var rotated_dir = Vector2(-dir.y, dir.x)
-	var start = pos + rotated_dir * width / 2.0
-	for i in range(road_samples):
-		var step = width / (road_samples - 1)
+	var start = pos + rotated_dir * Road.width / 2.0
+	for i in range(Road.road_samples):
+		var step = Road.width / (Road.road_samples - 1)
 		var l = i * step
 		var sample_pos = start + -rotated_dir * l
-		var height = noise.get_noise_2d(sample_pos.x, sample_pos.y) * height_scale
-		var mountain_height = (abs(mountain_noise.get_noise_2d(sample_pos.x, sample_pos.y))**2) * mountain_height_scale
-		var total_height = height + mountain_height + road_height_epsilon
+		var height = noise.get_noise_2d(sample_pos.x, sample_pos.y) * Noises.height_scale
+		var mountain_height = (abs(mountain_noise.get_noise_2d(sample_pos.x, sample_pos.y))**2) * Noises.mountain_height_scale
+		var total_height = height + mountain_height + Road.road_height_epsilon
 
 		if total_height > highest_sample:
 			highest_sample = total_height

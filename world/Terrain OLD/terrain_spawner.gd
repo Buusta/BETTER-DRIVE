@@ -1,26 +1,10 @@
 extends Node
 
-@export var player: Node3D # can be anything but it needs a position so chunks can generate around it
+var Terrain: TerrainData
+var Noises: NoiseData
+var References: ReferenceData
 
-@export var resolution := 32 # the base resolution of the chunk
-@export var chunk_size := 32 # the size of a chunk (m x m)
-@export var render_distance := 1 # how many chunks will be loaded in
-@export var minimum_resolution := 4
-@export var generate_collision := false
-@export var yoffset := 0.0
-
-@export var octaves := 4 # how detailed the noise is
-@export var height_scale := 25.0 # how much the terrain will be scaled along the y axis
-@export var frequency := 0.5 # how big the noise is
-@export var frequency_scale := 250.0 # scales the frequency (divides)
-@export var mountain_octaves := 4
-@export var mountain_height_scale := 100
-@export var mountain_frequency := 0.5
-@export var mountain_frequency_scale := 250
-@export var chunks_per_frame_target := 3 # how many chunk meshes can be generated and added as child per frame. helps with performance
-@export var terrain_shader: VisualShader # terrain shader
-
-var noise_seed = 69
+var chunks_per_frame_target := 3 # how many chunk meshes can be generated and added as child per frame. helps with performance
 
 var prev_player_chunk: Vector2i # the chunk the player was in last frame
 
@@ -29,16 +13,20 @@ var new_chunks := {} # key = Vector2i position (chunk_pos), vals = Distance
 var generating_chunks := {} # key = Vector2i position (chunk_pos), vals = true
 var pending_chunks = [] # vals = mesh_arrays, collision, Vector2i position (chunk_pos), distance
 
-@export var spawn_node: Node3D # the node the terrain should spawn under
+var spawn_node: Node3D # the node the terrain should spawn under
 
 var task_ids = [] # all WorkerThreadPool tasks that need to be completed.
 
 var chunks_per_frame := 25
 var target_chunks_per_frame := false
 
-func _ready() -> void:
-	_add_new_chunks(Vector2(player.position.x, player.position.z), render_distance)
-	print(noise_seed)
+func set_data(terrain_data: TerrainData, noise_data: NoiseData, reference_data: ReferenceData):
+	Terrain = terrain_data
+	Noises = noise_data
+	References = reference_data
+
+func _enter_tree() -> void:
+	_add_new_chunks(Vector2(References.player.position.x, References.player.position.z), Terrain.render_distance)
 
 func _process(_delta: float) -> void:
 	# make the first 10s of terrain generation fast, then slow down
@@ -47,13 +35,13 @@ func _process(_delta: float) -> void:
 			chunks_per_frame = chunks_per_frame_target
 			target_chunks_per_frame = true
 
-	var px = player.position.x
-	var pz = player.position.z
+	var px = References.player.position.x
+	var pz = References.player.position.z
 
 	# add new chunks to new_chunk list if the player has moved.
-	if prev_player_chunk != Vector2i(floor(px / resolution), floor(pz / resolution)): # if player not in player chunk
-		prev_player_chunk = Vector2i(floor(px / resolution), floor(pz / resolution))
-		_add_new_chunks(Vector2(px, pz), render_distance)
+	if prev_player_chunk != Vector2i(floor(px / Terrain.resolution), floor(pz / Terrain.resolution)): # if player not in player chunk
+		prev_player_chunk = Vector2i(floor(px / Terrain.resolution), floor(pz / Terrain.resolution))
+		_add_new_chunks(Vector2(px, pz), Terrain.render_distance)
 
 	# give workerThreadPool task if there are new chunks
 	if len(new_chunks) > 0:
@@ -90,7 +78,7 @@ func _process(_delta: float) -> void:
 			mesh_inst.mesh = mesh
 
 			var mat = ShaderMaterial.new()
-			mat.shader = terrain_shader
+			mat.shader = Terrain.terrain_shader
 			mesh_inst.material_override = mat
 
 			if lod <= 2:
@@ -98,9 +86,9 @@ func _process(_delta: float) -> void:
 				static_body.add_child(collision)
 				mesh_inst.add_child(static_body)
 
-			var offset = Vector3(chunk_pos.x * chunk_size, yoffset, chunk_pos.y * chunk_size)
+			var offset = Vector3(chunk_pos.x * Terrain.chunk_size, Terrain.yoffset, chunk_pos.y * Terrain.chunk_size)
 			mesh_inst.transform.origin = offset
-			spawn_node.add_child(mesh_inst)
+			References.spawn_node.add_child(mesh_inst)
 
 			chunks[chunk_pos] = {
 				"mesh": mesh_inst,
@@ -108,23 +96,24 @@ func _process(_delta: float) -> void:
 				}
 
 func _thread_generate_chunk(chunk_pos, lod):
-	var chunk_res = max(resolution / 2**lod, minimum_resolution)
-	var chunk_x_offset = chunk_pos.x * chunk_size
-	var chunk_z_offset = chunk_pos.y * chunk_size
+	var chunk_res = max(Terrain.resolution / 2**lod, Terrain.minimum_resolution)
+	var chunk_x_offset = chunk_pos.x * Terrain.chunk_size
+	var chunk_z_offset = chunk_pos.y * Terrain.chunk_size
 	
-	var vert_spacing = chunk_size / chunk_res
+	var vert_spacing = Terrain.chunk_size / chunk_res
 
 	var noise = FastNoiseLite.new()
 	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
 
-	noise.seed = noise_seed
-	noise.frequency = frequency / frequency_scale
-	noise.fractal_octaves = octaves
+	noise.seed = Noises.noise_seed
+	noise.frequency = Noises.frequency / Noises.frequency_scale
+	noise.fractal_octaves = Noises.octaves
 	
 	var mountain_noise = FastNoiseLite.new()
 	mountain_noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
-	mountain_noise.seed = noise_seed
-	mountain_noise.frequency = mountain_frequency / mountain_frequency_scale
+	mountain_noise.seed = Noises.noise_seed
+	mountain_noise.frequency = Noises.mountain_frequency / Noises.mountain_frequency_scale
+	mountain_noise.fractal_octaves = Noises.mountain_octaves
 
 	var verts = PackedVector3Array()
 	var indices = PackedInt32Array()
@@ -138,11 +127,11 @@ func _thread_generate_chunk(chunk_pos, lod):
 			var vert_x = col * vert_spacing - vert_spacing
 			var vert_z = row * vert_spacing - vert_spacing
 
-			var world_x = chunk_pos.x * chunk_size + vert_x
-			var world_z = chunk_pos.y * chunk_size + vert_z
+			var world_x = chunk_pos.x * Terrain.chunk_size + vert_x
+			var world_z = chunk_pos.y * Terrain.chunk_size + vert_z
 
-			var height = noise.get_noise_2d(world_x, world_z) * height_scale
-			var mountain_height = (abs(mountain_noise.get_noise_2d(world_x, world_z))**2) * mountain_height_scale
+			var height = noise.get_noise_2d(world_x, world_z) * Noises.height_scale
+			var mountain_height = (abs(mountain_noise.get_noise_2d(world_x, world_z))**2) * Noises.mountain_height_scale
 			
 			var total_height = height + mountain_height
 
@@ -152,8 +141,8 @@ func _thread_generate_chunk(chunk_pos, lod):
 			vert_z
 			)
 
-			var u = float(col * chunk_size / chunk_res + chunk_x_offset)
-			var v = float(row * chunk_size / chunk_res + chunk_z_offset)
+			var u = float(col * Terrain.chunk_size / chunk_res + chunk_x_offset)
+			var v = float(row * Terrain.chunk_size / chunk_res + chunk_z_offset)
 			uvs.append(Vector2(u, v))
 			verts.append(vert)
 
@@ -168,7 +157,7 @@ func _thread_generate_chunk(chunk_pos, lod):
 			indices.append(base + chunk_res + 4)
 			indices.append(base + chunk_res + 3)
 			
-			if generate_collision:
+			if Terrain.generate_collision:
 				faces.append(verts[base])
 				faces.append(verts[base + 1])
 				faces.append(verts[base + chunk_res + 3])
@@ -203,7 +192,7 @@ func _thread_generate_chunk(chunk_pos, lod):
 	arrays[Mesh.ARRAY_TEX_UV] = uvs
 
 	var collision_shape = CollisionShape3D.new()
-	if generate_collision:
+	if Terrain.generate_collision:
 		var concave = ConcavePolygonShape3D.new()
 		concave.set_faces(faces)
 
@@ -215,7 +204,7 @@ func _add_mesh_main_thread(m: Array, c: CollisionShape3D, pos: Vector2i, dist: i
 	pending_chunks.append([m, c, pos, dist])
 
 func _add_new_chunks(pos: Vector2, rend_dist: int):
-	var center_chunk = Vector2i(floor(pos.x / chunk_size), floor(pos.y / chunk_size))
+	var center_chunk = Vector2i(floor(pos.x / Terrain.chunk_size), floor(pos.y / Terrain.chunk_size))
 
 	var needed_chunks = {}
 

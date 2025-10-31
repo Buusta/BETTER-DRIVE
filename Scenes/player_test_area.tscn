@@ -1,6 +1,7 @@
-[gd_scene load_steps=7 format=3 uid="uid://vrehv4bixxvc"]
+[gd_scene load_steps=8 format=3 uid="uid://vrehv4bixxvc"]
 
-[ext_resource type="PackedScene" uid="uid://df2howh1xc4xu" path="res://Scenes/player_body.tscn" id="1_jnl1g"]
+[ext_resource type="PackedScene" uid="uid://df2howh1xc4xu" path="res://player/player_body.tscn" id="1_jnl1g"]
+[ext_resource type="PackedScene" uid="uid://gl66cbv21e5f" path="res://Scenes/Player/Car.tscn" id="3_4t6qp"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_jnl1g"]
 sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
@@ -39,4 +40,7 @@ mesh = SubResource("PlaneMesh_jnl1g")
 skeleton = NodePath("../..")
 
 [node name="PlayerBody" parent="." instance=ExtResource("1_jnl1g")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.025382519, 1, -0.06238222)
+transform = Transform3D(0.6442038, 0, -0.764854, 0, 1, 0, 0.764854, 0, 0.6442038, 1.8787837, 1, -0.06238222)
+
+[node name="Car" parent="." instance=ExtResource("3_4t6qp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2518206, 0)

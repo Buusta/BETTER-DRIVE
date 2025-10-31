@@ -1,51 +1,33 @@
 extends RigidBody3D
 
+@onready var player_seat: Node3D = $PlayerSeat
+@onready var exit_point: Node3D = $ExitPoint
+
 @export var wheels: Array[RaycastWheel]
-@export var accel := 600.0
+@export var accel := 2000.0
 @export var tire_turn_speed := 2.0
 @export var tire_max_turn_degrees := 25.0
 @export var max_steer_speed := 25.0
 
-var mouse_sensitivity := 0.002
-var started := false
 var motor_input := 0
-
-@onready var springarm: SpringArm3D = $SpringArm3D
-var mouse_captured := true
+var active = false
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventMouseMotion:
-		if mouse_captured:
-			springarm.rotation.y -= event.relative.x * mouse_sensitivity
-			springarm.rotation.x -= event.relative.y * mouse_sensitivity
-			springarm.rotation.x = clamp(springarm.rotation.x, -1.5, 1.5)
-
-	if event.is_action_pressed("move_forward"):
+	if event.is_action_pressed("move_forward") and active:
 		motor_input = 1
 	elif event.is_action_released("move_forward"):
 		motor_input = 0
 
-	if event.is_action_pressed("move_back"):
+	if event.is_action_pressed("move_back") and active:
 		motor_input = -1
 	elif event.is_action_released("move_back"):
 		motor_input = 0
 
-	if event.is_action_pressed('spawn_ball'):
-		start()
-		
 	if event.is_action_pressed('reset'):
 		reset()
-		
-	if event is InputEventKey and event.pressed:
-		if event.keycode == Key.KEY_ESCAPE:
-			mouse_captured = not mouse_captured
-			if mouse_captured:
-				Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
-			else:
-				Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
 func _basic_steering_rotation(delta: float):
-	var turn_input := Input.get_axis('move_right', 'move_left') * tire_turn_speed
+	var turn_input := Input.get_axis('move_right', 'move_left') * tire_turn_speed if active else 0.0
 	var steer_angle = max((1.0-((linear_velocity.length() * 3.6) / max_steer_speed)), .1)
 	
 	if turn_input:
@@ -58,20 +40,9 @@ func _basic_steering_rotation(delta: float):
 		$WheelRay_FL.rotation.y = move_toward($WheelRay_FL.rotation.y, 0, tire_turn_speed * delta)
 		$WheelRay_FR.rotation.y = move_toward($WheelRay_FR.rotation.y, 0, tire_turn_speed * delta)
 
-# Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-	
-	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
-	springarm.spring_length = 10.0
-	
-	self.freeze = true
 	for wheel in wheels:
 		wheel.target_position.y = -(wheel.wheel_radius + wheel.rest_dist)
-	pass # Replace with function body.
-
-func start():
-	started = true
-	self.freeze = false
 
 func reset():
 	rotation = Vector3(0.0, rotation.y, 0.0)
@@ -79,20 +50,18 @@ func reset():
 	linear_velocity = Vector3.ZERO
 	angular_velocity = Vector3.ZERO
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
 func _physics_process(delta: float) -> void:
 	_basic_steering_rotation(delta)
-	if started:
-		for wheel in wheels:
-			wheel.force_raycast_update()
-			var spring_force = calc_wheel_suspension(wheel)
-			apply_force(spring_force[0], spring_force[1])
-			
-			var accel_force = wheel_acceleration(wheel)
-			apply_force(accel_force[0], accel_force[1])
-			
-			var steer_force = _wheel_traction(wheel)
-			apply_force(steer_force[0], steer_force[1])
+	for wheel in wheels:
+		wheel.force_raycast_update()
+		var spring_force = calc_wheel_suspension(wheel)
+		apply_force(spring_force[0], spring_force[1])
+
+		var accel_force = wheel_acceleration(wheel)
+		apply_force(accel_force[0], accel_force[1])
+		
+		var steer_force = _wheel_traction(wheel)
+		apply_force(steer_force[0], steer_force[1])
 
 func _get_point_velocity(point: Vector3) -> Vector3:
 	return linear_velocity + angular_velocity.cross(point - global_position)
@@ -144,3 +113,11 @@ func calc_wheel_suspension(ray: RaycastWheel):
 			return [force_vector, force_pos_offset]
 	else:
 		return [Vector3(0.0, 0.0, 0.0), Vector3(0.0, 0.0, 0.0)]
+
+func activate(toggle: bool):
+	if toggle:
+		linear_damp = 0.1
+		active = true
+	else:
+		linear_damp = 1.5
+		active = false

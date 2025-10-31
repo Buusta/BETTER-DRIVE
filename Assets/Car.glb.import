@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://bpk6sxin7xl47"
-path="res://.godot/imported/CarBody.glb-dac8e80233bb0f32828fd5bc2b6f09c0.scn"
+uid="uid://dd6py04mimspi"
+path="res://.godot/imported/Car.glb-01ed21ce2f5ec17ea54cfbe0323a6bad.scn"
 
 [deps]
 
-source_file="res://Assets/CarBody.glb"
-dest_files=["res://.godot/imported/CarBody.glb-dac8e80233bb0f32828fd5bc2b6f09c0.scn"]
+source_file="res://Assets/Car.glb"
+dest_files=["res://.godot/imported/Car.glb-01ed21ce2f5ec17ea54cfbe0323a6bad.scn"]
 
 [params]
 
@@ -39,4 +39,4 @@ materials/extract_format=0
 materials/extract_path=""
 _subresources={}
 gltf/naming_version=2
-gltf/embedded_image_handling=1
+gltf/embedded_image_handling=0
