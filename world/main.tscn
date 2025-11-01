@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3 uid="uid://dcuef1fiebl1h"]
+[gd_scene load_steps=18 format=3 uid="uid://dcuef1fiebl1h"]
 
 [ext_resource type="Script" uid="uid://pi7bgsjcwxt" path="res://world/floating_origin.gd" id="1_cmo1i"]
 [ext_resource type="PackedScene" uid="uid://dx1jyjrpkq5m2" path="res://world/terrain_handler.tscn" id="2_i1eo7"]
@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://gl66cbv21e5f" path="res://Scenes/Player/Car.tscn" id="4_04q08"]
 [ext_resource type="Shader" uid="uid://qogiayfdhdbe" path="res://Assets/Ground.tres" id="4_vrojb"]
 [ext_resource type="PackedScene" uid="uid://df2howh1xc4xu" path="res://player/player_body.tscn" id="5_vrojb"]
+[ext_resource type="Script" uid="uid://cyipu7217wlk1" path="res://game_manager.gd" id="6_vrojb"]
 [ext_resource type="PackedScene" uid="uid://cujusx6weltlg" path="res://ufo/ufo_body.tscn" id="8_04q08"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_a202f"]
@@ -95,7 +96,8 @@ Terrains = Array[ExtResource("3_04q08")]([SubResource("Resource_d3w6m"), SubReso
 [node name="UI" parent="." node_paths=PackedStringArray("car") instance=ExtResource("3_gu74f")]
 car = NodePath("../World/Car")
 
-[node name="World" type="Node3D" parent="."]
+[node name="World" type="Node3D" parent="." groups=["World"]]
+script = ExtResource("6_vrojb")
 
 [node name="Terrain" type="Node3D" parent="World"]
 
@@ -104,7 +106,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.3451157, 0)
 accel = 4000.0
 
 [node name="PlayerBody" parent="World" instance=ExtResource("5_vrojb")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5556833, 8.056031, 0)
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="World"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -26.43724, 18.852316, 25.952122)
@@ -112,4 +114,4 @@ material_override = SubResource("StandardMaterial3D_ynf5e")
 mesh = SubResource("SphereMesh_ynf5e")
 
 [node name="UfoBody" parent="World" instance=ExtResource("8_04q08")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 44.527, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.933731, 88.79367, 80.71316)

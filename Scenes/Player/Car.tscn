@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=4 uid="uid://gl66cbv21e5f"]
+[gd_scene load_steps=17 format=4 uid="uid://gl66cbv21e5f"]
 
 [ext_resource type="Script" uid="uid://cehhidk6adjsc" path="res://Scripts/Player/car.gd" id="1_y2uan"]
 [ext_resource type="Script" uid="uid://dc3arp05xnp60" path="res://Scenes/raycast_wheel.gd" id="3_jbim0"]
@@ -6,6 +6,7 @@
 [ext_resource type="Script" uid="uid://cdm5exd8nbhhn" path="res://components/interactable_component.gd" id="4_7558e"]
 [ext_resource type="Material" uid="uid://faml0tm6cbrj" path="res://Assets/Car.tres" id="4_x62y0"]
 [ext_resource type="Script" uid="uid://2vw6v4xudxqr" path="res://components/seat_component.gd" id="6_q36gr"]
+[ext_resource type="Script" uid="uid://bvuf56ur35av4" path="res://components/world_access_component.gd" id="7_e3y88"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_7558e"]
 
@@ -83,35 +84,6 @@ _surfaces = [{
 blend_shape_mode = 0
 shadow_mesh = SubResource("ArrayMesh_ps06r")
 
-[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_q36gr"]
-sky_top_color = Color(0.09763796, 0.16473103, 0.29907915, 1)
-sky_horizon_color = Color(0.31556737, 0.32212052, 0.33524, 1)
-ground_bottom_color = Color(0, 0, 0, 1)
-ground_horizon_color = Color(0, 0, 0, 1)
-
-[sub_resource type="Sky" id="Sky_noarx"]
-sky_material = SubResource("ProceduralSkyMaterial_q36gr")
-
-[sub_resource type="Environment" id="Environment_e3y88"]
-background_mode = 2
-sky = SubResource("Sky_noarx")
-ambient_light_sky_contribution = 0.15
-tonemap_mode = 2
-glow_enabled = true
-fog_light_color = Color(0.54509807, 0.5647059, 0.57254905, 1)
-fog_light_energy = 0.07
-fog_sun_scatter = 0.02
-fog_sky_affect = 0.044
-fog_depth_curve = 0.6597542
-fog_depth_begin = 0.0
-fog_depth_end = 2500.0
-volumetric_fog_enabled = true
-volumetric_fog_density = 0.0103
-volumetric_fog_emission = Color(0.0940214, 0.098104365, 0.1201318, 1)
-volumetric_fog_emission_energy = 4.25
-volumetric_fog_length = 114.99
-volumetric_fog_sky_affect = 0.465
-
 [node name="Car" type="RigidBody3D" node_paths=PackedStringArray("wheels")]
 mass = 1100.0
 linear_damp = 1.0
@@ -119,10 +91,12 @@ script = ExtResource("1_y2uan")
 wheels = [NodePath("WheelRay_FL"), NodePath("WheelRay_FR"), NodePath("WheelRay_BL"), NodePath("WheelRay_BR")]
 accel = 2400.0
 
-[node name="radar_screen" type="MeshInstance3D" parent="."]
+[node name="radar_screen" type="MeshInstance3D" parent="." node_paths=PackedStringArray("world_access")]
 transform = Transform3D(-0.17745513, -1.5025153e-08, -3.8622763e-09, -5.0886144e-09, 0.09810929, -0.14786783, 1.4655321e-08, -0.14786783, -0.09810929, -0.16335729, 1.0175692, 0.792469)
 mesh = SubResource("PlaneMesh_7558e")
 script = ExtResource("3_x62y0")
+world_access = NodePath("../WorldAccessComponent")
+radar_range = 10000.0
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.002746582, 0.9517927, 0.1100052)
@@ -210,9 +184,6 @@ script = ExtResource("6_q36gr")
 driver_seat = true
 car = NodePath("..")
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
-environment = SubResource("Environment_e3y88")
-
 [node name="Headlight_L2" type="SpotLight3D" parent="."]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -0.704, 0.818, 2.266)
 light_energy = 4.0
@@ -224,6 +195,9 @@ transform = Transform3D(-1, 0, 8.742278e-08, 0, 1, 0, -8.742278e-08, 0, -1, 0.70
 light_energy = 4.0
 spot_range = 4096.0
 spot_angle = 29.666395
+
+[node name="WorldAccessComponent" type="Node" parent="."]
+script = ExtResource("7_e3y88")
 
 [connection signal="interacted" from="DoorBody/InteractableComponent" to="SeatComponent" method="interact_seat"]
 [connection signal="activate" from="SeatComponent" to="." method="activate"]

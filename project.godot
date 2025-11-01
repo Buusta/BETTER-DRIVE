@@ -24,6 +24,11 @@ settings/addon_root_folder="res://addons/debug_draw_3d"
 
 window/size/viewport_width=2560
 window/size/viewport_height=1440
+window/size/mode=3
+
+[global_group]
+
+World="Nodes with this group will have the game_manager code"
 
 [input]
 
@@ -109,6 +114,7 @@ camera_zoom={
 3d/run_on_separate_thread=true
 common/physics_jitter_fix=0.0
 3d/physics_engine="Jolt Physics"
+jolt_physics_3d/limits/max_linear_velocity=5000.0
 common/physics_interpolation=true
 
 [rendering]

@@ -4,6 +4,8 @@
 [ext_resource type="Material" uid="uid://bawripee7qq00" path="res://Assets/ufo.tres" id="1_dy4wf"]
 [ext_resource type="Script" uid="uid://n07te77a12nu" path="res://ufo/ufo_movement_component.gd" id="3_0yi84"]
 [ext_resource type="Shader" uid="uid://dxmdby3w4nvao" path="res://Assets/UfoLights.tres" id="4_3do2f"]
+[ext_resource type="Script" uid="uid://bacxuqfb1beux" path="res://components/world_register_component.gd" id="5_858tw"]
+[ext_resource type="Script" uid="uid://bnarrpklmdl3e" path="res://structs/registry_entry_struct.gd" id="6_vsrqh"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_dy4wf"]
 height = 5.7436523
@@ -83,34 +85,11 @@ shader = ExtResource("4_3do2f")
 shader_parameter/EmissiveColor = Color(0.19, 0.97300005, 1, 1)
 shader_parameter/Emissive = 14.505
 
-[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_3do2f"]
-sky_top_color = Color(0.09763796, 0.16473103, 0.29907915, 1)
-sky_horizon_color = Color(0.31556737, 0.32212052, 0.33524, 1)
-ground_bottom_color = Color(0, 0, 0, 1)
-ground_horizon_color = Color(0, 0, 0, 1)
-
-[sub_resource type="Sky" id="Sky_3do2f"]
-sky_material = SubResource("ProceduralSkyMaterial_3do2f")
-
-[sub_resource type="Environment" id="Environment_858tw"]
-background_mode = 2
-sky = SubResource("Sky_3do2f")
-ambient_light_sky_contribution = 0.15
-tonemap_mode = 2
-glow_enabled = true
-fog_light_color = Color(0.54509807, 0.5647059, 0.57254905, 1)
-fog_light_energy = 0.07
-fog_sun_scatter = 0.02
-fog_sky_affect = 0.044
-fog_depth_curve = 0.6597542
-fog_depth_begin = 0.0
-fog_depth_end = 2500.0
-volumetric_fog_enabled = true
-volumetric_fog_density = 0.0103
-volumetric_fog_emission = Color(0.0940214, 0.098104365, 0.1201318, 1)
-volumetric_fog_emission_energy = 4.25
-volumetric_fog_length = 114.99
-volumetric_fog_sky_affect = 0.465
+[sub_resource type="Resource" id="Resource_svuqx"]
+script = ExtResource("6_vsrqh")
+target = NodePath("..")
+property = "ufos"
+metadata/_custom_type_script = "uid://bnarrpklmdl3e"
 
 [node name="UfoBody" type="RigidBody3D" node_paths=PackedStringArray("ufo_movement_component")]
 mass = 299792.0
@@ -131,12 +110,13 @@ surface_material_override/1 = SubResource("ShaderMaterial_858tw")
 [node name="UfoMovementComponent" type="Node" parent="." node_paths=PackedStringArray("UfoBody")]
 script = ExtResource("3_0yi84")
 UfoBody = NodePath("..")
-linear_acceleration = 25.0
+linear_acceleration = 50.0
 angular_velocity = 2.5
 max_velocity = 250.0
-target_range_tolerance = 5.0
+target_range_tolerance = 25.0
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
-environment = SubResource("Environment_858tw")
+[node name="WorldRegisterComponent" type="Node" parent="."]
+script = ExtResource("5_858tw")
+entries = Array[ExtResource("6_vsrqh")]([SubResource("Resource_svuqx")])
 
 [connection signal="target_reached" from="UfoMovementComponent" to="." method="target_reached"]

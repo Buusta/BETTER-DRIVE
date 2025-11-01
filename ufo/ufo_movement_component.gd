@@ -40,7 +40,7 @@ func _physics_process(delta: float) -> void:
 		# decelerate smoothly
 		current_vel_2d -= current_vel_2d.normalized() * min(current_vel_2d.length(), linear_acceleration * delta)
 
-	if Vector2(UfoBody.linear_velocity.x, UfoBody.linear_velocity.z).length() < .1:
+	if Vector2(UfoBody.linear_velocity.x, UfoBody.linear_velocity.z).length() < target_range_tolerance and distance < decelerate_distance:
 		target_reached.emit()
 
 	# Clamp max speed

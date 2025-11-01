@@ -3,7 +3,7 @@ extends Node2D
 @onready var radar_size: Vector2 = Vector2(get_parent().size)
 @export var radar_range: float = 300.0
 @export var sweep_speed: float = 1.5
-@export var ufo_positions : Array[Vector2] = []
+var ufos : Array[Node]
 
 var blips: Array[RadarBlip] = []
 var sweep_angle: float = 0.0
@@ -13,13 +13,18 @@ var glob_rot: float
 var radius: float = (512.0 / 2.0) * 0.9
 
 # Called when the node enters the scene tree for the first time.
-func _ready() -> void:
-	for ufo in ufo_positions:
+func add_ufo(ufo: Node) -> void:
+	if not ufos.has(ufo):
 		var blip = RadarBlip.new()
-		blip.pos = ufo
+		blip.pos = to_vec2(ufo.position)
 		blip.alpha = 1.0
 		blip.decay_rate = 1.5 / (sweep_speed * PI)
 		blips.append(blip)
+		ufos.append(ufo)
+	else:
+		var ufo_index = ufos.find(ufo)
+		blips[ufo_index].pos = to_vec2(ufo.position)
+
 
 func _process(delta):
 	sweep_angle += delta * sweep_speed
@@ -66,3 +71,6 @@ func _draw():
 			blip.alpha = 1.0
 
 		draw_circle(radar_pos, 4, base_color * blip.alpha)
+
+func to_vec2(vec: Vector3) -> Vector2:
+	return Vector2(vec.x, vec.z)
