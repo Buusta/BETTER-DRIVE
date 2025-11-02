@@ -29,6 +29,7 @@ window/size/mode=3
 [global_group]
 
 World="Nodes with this group will have the game_manager code"
+UIScreen="this is for mouse clicking on any in game UI"
 
 [input]
 
@@ -121,3 +122,4 @@ common/physics_interpolation=true
 
 lights_and_shadows/directional_shadow/soft_shadow_filter_quality=4
 anti_aliasing/quality/screen_space_aa=2
+anti_aliasing/quality/use_debanding=true

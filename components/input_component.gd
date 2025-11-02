@@ -5,6 +5,7 @@ signal interact
 signal jump
 signal mouse_input
 signal click_l
+signal zoom
 
 @onready var parent = get_parent()
 
@@ -36,7 +37,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("interact"):
 		interact.emit(parent)
 
-
+	if event.is_action_pressed('camera_zoom'):
+		zoom.emit()
 
 	if event.is_action_pressed('take_picture'):
 		click_l.emit()

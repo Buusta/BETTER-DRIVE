@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://ciw0vcmcx8bs3"
-path="res://.godot/imported/Car2.glb-bb86eaa63de89707b8087e46e9b1a7d5.scn"
+uid="uid://ow4s8ayef5bd"
+path="res://.godot/imported/Laptop.fbx-b89bb242a188532e5f56fcf60acad3ca.scn"
 
 [deps]
 
-source_file="res://Assets/Car2.glb"
-dest_files=["res://.godot/imported/Car2.glb-bb86eaa63de89707b8087e46e9b1a7d5.scn"]
+source_file="res://laptop/Laptop.fbx"
+dest_files=["res://.godot/imported/Laptop.fbx-b89bb242a188532e5f56fcf60acad3ca.scn"]
 
 [params]
 
@@ -30,7 +30,7 @@ meshes/force_disable_compression=false
 skins/use_named_skins=true
 animation/import=true
 animation/fps=30
-animation/trimming=false
+animation/trimming=true
 animation/remove_immutable_tracks=true
 animation/import_rest_as_RESET=false
 import_script/path=""
@@ -38,5 +38,7 @@ materials/extract=0
 materials/extract_format=0
 materials/extract_path=""
 _subresources={}
-gltf/naming_version=2
-gltf/embedded_image_handling=1
+fbx/importer=0
+fbx/allow_geometry_helper_nodes=false
+fbx/embedded_image_handling=1
+fbx/naming_version=2

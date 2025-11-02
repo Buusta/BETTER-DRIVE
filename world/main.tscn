@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3 uid="uid://dcuef1fiebl1h"]
+[gd_scene load_steps=17 format=3 uid="uid://dcuef1fiebl1h"]
 
 [ext_resource type="Script" uid="uid://pi7bgsjcwxt" path="res://world/floating_origin.gd" id="1_cmo1i"]
 [ext_resource type="PackedScene" uid="uid://dx1jyjrpkq5m2" path="res://world/terrain_handler.tscn" id="2_i1eo7"]
@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" uid="uid://df2howh1xc4xu" path="res://player/player_body.tscn" id="5_vrojb"]
 [ext_resource type="Script" uid="uid://cyipu7217wlk1" path="res://game_manager.gd" id="6_vrojb"]
 [ext_resource type="PackedScene" uid="uid://cujusx6weltlg" path="res://ufo/ufo_body.tscn" id="8_04q08"]
+[ext_resource type="PackedScene" uid="uid://bydr2xcdqsf3f" path="res://player/camera/camera_Body.tscn" id="10_qnd6n"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_a202f"]
 sky_top_color = Color(0.09763796, 0.16473103, 0.29907915, 1)
@@ -69,12 +70,6 @@ yoffset = -15.0
 terrain_shader = ExtResource("4_vrojb")
 metadata/_custom_type_script = "uid://brwuw7ml11ami"
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ynf5e"]
-stencil_mode = 3
-stencil_flags = 2
-
-[sub_resource type="SphereMesh" id="SphereMesh_ynf5e"]
-
 [node name="Root" type="Node3D" node_paths=PackedStringArray("player", "world")]
 script = ExtResource("1_cmo1i")
 player = NodePath("World/Car")
@@ -82,11 +77,6 @@ world = NodePath("World")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_a0tk4")
-
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(-0.8660253, -0.43301284, 0.24999991, -0.25233153, 0.81015503, 0.5291286, -0.4316584, 0.39515603, -0.8108779, 0, 0, 0)
-visible = false
-shadow_enabled = true
 
 [node name="TerrainHandler" parent="." node_paths=PackedStringArray("player", "spawn_node") instance=ExtResource("2_i1eo7")]
 player = NodePath("../World/Car")
@@ -108,10 +98,8 @@ accel = 4000.0
 [node name="PlayerBody" parent="World" instance=ExtResource("5_vrojb")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5556833, 8.056031, 0)
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="World"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -26.43724, 18.852316, 25.952122)
-material_override = SubResource("StandardMaterial3D_ynf5e")
-mesh = SubResource("SphereMesh_ynf5e")
-
 [node name="UfoBody" parent="World" instance=ExtResource("8_04q08")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.933731, 88.79367, 80.71316)
+
+[node name="CameraBody" parent="World" instance=ExtResource("10_qnd6n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5416523, 8.624935, 0.48963374)

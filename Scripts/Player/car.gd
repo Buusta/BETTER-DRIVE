@@ -5,6 +5,7 @@ extends RigidBody3D
 
 @export var wheels: Array[RaycastWheel]
 @export var accel := 2000.0
+@export var deccel := 1000.0
 @export var tire_turn_speed := 2.0
 @export var tire_max_turn_degrees := 25.0
 @export var max_steer_speed := 25.0
@@ -88,6 +89,13 @@ func wheel_acceleration(ray: RaycastWheel):
 		var force_vector := forward_dir * accel
 		var force_pos := contact - global_position
 		return [force_vector, force_pos]
+	elif ray.is_colliding() and not active and linear_velocity.length():
+		var forward_dir := ray.global_basis.z
+		var vel = forward_dir.dot(linear_velocity)
+		var contact := ray.get_collision_point()
+		var force_pos := contact - global_position
+		var deccelerate_force := -forward_dir * deccel * signf(vel)
+		return [deccelerate_force, force_pos]
 	else:
 		return [Vector3(0.0, 0.0, 0.0), Vector3(0.0, 0.0, 0.0)]
 
@@ -119,5 +127,5 @@ func activate(toggle: bool):
 		linear_damp = 0.1
 		active = true
 	else:
-		linear_damp = 1.5
+		linear_damp = 25.0
 		active = false
