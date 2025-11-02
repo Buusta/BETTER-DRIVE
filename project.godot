@@ -10,7 +10,7 @@ config_version=5
 
 [application]
 
-config/name="THE BETTER DRIVE"
+config/name="IFO: Identify Flying Objects"
 config/version="0.1"
 run/main_scene="uid://dcuef1fiebl1h"
 config/features=PackedStringArray("4.5", "Forward Plus")
