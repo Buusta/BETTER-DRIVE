@@ -1,4 +1,5 @@
 extends Node
+class_name SeatComponent
 
 signal activate
 
@@ -13,7 +14,7 @@ func interact_seat(player: Node3D):
 		car.add_child(player)
 
 		player.global_position = car.player_seat.global_position
-		player.get_node('SpringArm3D').global_rotation = car.player_seat.global_rotation
+		player.get_node('CameraArm').global_rotation = car.player_seat.global_rotation
 
 		player.get_node('PlayerShape').disabled = true
 		player.freeze = true

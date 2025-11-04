@@ -1,0 +1,125 @@
+[gd_scene load_steps=20 format=3 uid="uid://dcuef1fiebl1h"]
+
+[ext_resource type="Script" uid="uid://pi7bgsjcwxt" path="res://world/floating_origin.gd" id="1_cmo1i"]
+[ext_resource type="PackedScene" uid="uid://dx1jyjrpkq5m2" path="res://world/terrain_handler.tscn" id="2_i1eo7"]
+[ext_resource type="Script" uid="uid://brwuw7ml11ami" path="res://scripts/structs/terrain_struct.gd" id="3_04q08"]
+[ext_resource type="PackedScene" uid="uid://cl32v8luarx6x" path="res://scenes/ui/ui.tscn" id="3_gu74f"]
+[ext_resource type="PackedScene" uid="uid://gl66cbv21e5f" path="res://scenes/entities/car_body.tscn" id="4_04q08"]
+[ext_resource type="Shader" uid="uid://qogiayfdhdbe" path="res://assets/materials/Ground.tres" id="4_vrojb"]
+[ext_resource type="PackedScene" uid="uid://df2howh1xc4xu" path="res://scenes/entities/controllable/player/player_body.tscn" id="5_vrojb"]
+[ext_resource type="Script" uid="uid://cyipu7217wlk1" path="res://game_manager.gd" id="6_vrojb"]
+[ext_resource type="PackedScene" uid="uid://cujusx6weltlg" path="res://scenes/entities/active/ufo/ufo_body.tscn" id="8_04q08"]
+[ext_resource type="PackedScene" uid="uid://bydr2xcdqsf3f" path="res://scenes/entities/passive/camera/camera_Body.tscn" id="10_qnd6n"]
+[ext_resource type="PackedScene" uid="uid://6j42448kugsd" path="res://scenes/entities/passive/flashlight/flashlight_body.tscn" id="11_efxa6"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_a202f"]
+sky_top_color = Color(0.09763796, 0.16473103, 0.29907915, 1)
+sky_horizon_color = Color(0.31556737, 0.32212052, 0.33524, 1)
+ground_bottom_color = Color(0, 0, 0, 1)
+ground_horizon_color = Color(0, 0, 0, 1)
+
+[sub_resource type="Sky" id="Sky_04q08"]
+sky_material = SubResource("ProceduralSkyMaterial_a202f")
+
+[sub_resource type="Environment" id="Environment_a0tk4"]
+background_mode = 2
+sky = SubResource("Sky_04q08")
+ambient_light_sky_contribution = 0.15
+tonemap_mode = 2
+glow_enabled = true
+fog_light_color = Color(0.54509807, 0.5647059, 0.57254905, 1)
+fog_light_energy = 0.07
+fog_sun_scatter = 0.02
+fog_sky_affect = 0.044
+fog_depth_curve = 0.6597542
+fog_depth_begin = 0.0
+fog_depth_end = 2500.0
+volumetric_fog_enabled = true
+volumetric_fog_density = 0.01
+volumetric_fog_emission = Color(0.0672, 0.07512, 0.12, 1)
+volumetric_fog_emission_energy = 2.0
+volumetric_fog_length = 114.99
+volumetric_fog_sky_affect = 0.0
+
+[sub_resource type="Resource" id="Resource_d3w6m"]
+script = ExtResource("3_04q08")
+resolution = 32
+chunk_size = 64
+render_distance = 10
+minimum_resolution = 4
+generate_collision = true
+terrain_shader = ExtResource("4_vrojb")
+metadata/_custom_type_script = "uid://brwuw7ml11ami"
+
+[sub_resource type="Resource" id="Resource_f5lqr"]
+script = ExtResource("3_04q08")
+resolution = 64
+chunk_size = 4096
+render_distance = 8
+minimum_resolution = 4
+yoffset = -5.0
+terrain_shader = ExtResource("4_vrojb")
+metadata/_custom_type_script = "uid://brwuw7ml11ami"
+
+[sub_resource type="Resource" id="Resource_qnd6n"]
+script = ExtResource("3_04q08")
+resolution = 32
+chunk_size = 8192
+render_distance = 8
+minimum_resolution = 4
+yoffset = -15.0
+terrain_shader = ExtResource("4_vrojb")
+metadata/_custom_type_script = "uid://brwuw7ml11ami"
+
+[sub_resource type="BoxMesh" id="BoxMesh_efxa6"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_dg77c"]
+
+[node name="Root" type="Node3D" node_paths=PackedStringArray("player", "world")]
+script = ExtResource("1_cmo1i")
+player = NodePath("World/Car")
+world = NodePath("World")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_a0tk4")
+
+[node name="TerrainHandler" parent="." node_paths=PackedStringArray("player", "spawn_node") instance=ExtResource("2_i1eo7")]
+player = NodePath("../World/Car")
+spawn_node = NodePath("../World/Terrain")
+Terrains = Array[ExtResource("3_04q08")]([SubResource("Resource_d3w6m"), SubResource("Resource_f5lqr"), SubResource("Resource_qnd6n")])
+
+[node name="UI" parent="." node_paths=PackedStringArray("car") instance=ExtResource("3_gu74f")]
+car = NodePath("../World/Car")
+
+[node name="World" type="Node3D" parent="." groups=["World"]]
+script = ExtResource("6_vrojb")
+
+[node name="Terrain" type="Node3D" parent="World"]
+
+[node name="Car" parent="World" instance=ExtResource("4_04q08")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.3451157, 0)
+accel = 4000.0
+
+[node name="PlayerBody" parent="World" instance=ExtResource("5_vrojb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5556833, 8.056031, 0)
+
+[node name="UfoBody" parent="World" instance=ExtResource("8_04q08")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.933731, 88.79367, 80.71316)
+
+[node name="CameraBody" parent="World" instance=ExtResource("10_qnd6n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.9284592, 1.9571812, -0.3620878)
+
+[node name="FlashlightBody" parent="World" instance=ExtResource("11_efxa6")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.3741987, 1.2159258, -0.39389455)
+
+[node name="StaticBody3D" type="StaticBody3D" parent="World"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.021224, 0.351071, 0)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="World/StaticBody3D"]
+mesh = SubResource("BoxMesh_efxa6")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="World/StaticBody3D"]
+shape = SubResource("BoxShape3D_dg77c")
+
+[node name="SpotLight3D" type="SpotLight3D" parent="World/StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 2.2278905, 0)

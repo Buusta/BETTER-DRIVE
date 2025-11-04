@@ -1,0 +1,13 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3 uid="uid://faml0tm6cbrj"]
+
+[ext_resource type="Shader" uid="uid://ee7efjjs3y2k" path="res://assets/materials/CarPaint.tres" id="1_5cxmt"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_5cxmt")
+shader_parameter/ColorParameter = Color(1, 0.19215687, 0, 1)
+shader_parameter/Metallic = 1.0
+shader_parameter/Roughness = 0.256
+shader_parameter/Specular = 0.6
+shader_parameter/ClearCoat = 0.0
+shader_parameter/ClearCoatRoughness = 0.715

@@ -1,0 +1,107 @@
+[gd_scene load_steps=14 format=3 uid="uid://df2howh1xc4xu"]
+
+[ext_resource type="Script" uid="uid://cmi4mij3tuwvj" path="res://scenes/entities/controllable/player/player_body.gd" id="1_aplnl"]
+[ext_resource type="Script" uid="uid://c828y6offturu" path="res://components/input_component.gd" id="6_pvmx2"]
+[ext_resource type="Script" uid="uid://5e7yjtyrtrni" path="res://components/interact_component.gd" id="7_g0ebe"]
+[ext_resource type="Script" uid="uid://b7ir1iqmwfegc" path="res://components/movement_component.gd" id="8_pwlsx"]
+[ext_resource type="Script" uid="uid://dqae8j6welr5" path="res://components/inventory_component.gd" id="8_qe8e7"]
+[ext_resource type="Script" uid="uid://bvuf56ur35av4" path="res://components/world_access_component.gd" id="9_4ahv8"]
+[ext_resource type="Script" uid="uid://oxcwvwkyily0" path="res://components/focus_component.gd" id="9_nempf"]
+[ext_resource type="Script" uid="uid://c62xmbxgxvk0g" path="res://components/take_picture_component.gd" id="10_64r4e"]
+[ext_resource type="PackedScene" uid="uid://bxi52rdqnhb15" path="res://scenes/ui/player_ui.tscn" id="10_jxu3w"]
+[ext_resource type="Script" uid="uid://bhgtmyu7udswv" path="res://components/camera_zoom_component.gd" id="11_i2wpr"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_aplnl"]
+radius = 0.35
+height = 1.8
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_aplnl"]
+radius = 0.35
+height = 1.8
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_pwlsx"]
+radius = 0.35
+
+[node name="PlayerBody" type="RigidBody3D" node_paths=PackedStringArray("hold_point")]
+collision_layer = 8
+collision_mask = 11
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+axis_lock_angular_z = true
+script = ExtResource("1_aplnl")
+hold_point = NodePath("CameraArm/ViewportCamera/HoldPoint")
+
+[node name="PlayerShape" type="CollisionShape3D" parent="."]
+shape = SubResource("CapsuleShape3D_aplnl")
+
+[node name="PlayerMesh" type="MeshInstance3D" parent="."]
+mesh = SubResource("CapsuleMesh_aplnl")
+
+[node name="CameraArm" type="SpringArm3D" parent="."]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0.6649871, 0)
+collision_mask = 0
+spring_length = 0.0
+
+[node name="ViewportCamera" type="Camera3D" parent="CameraArm"]
+cull_mask = 1048063
+current = true
+fov = 85.0
+far = 150000.0
+
+[node name="HoldPoint" type="Node3D" parent="CameraArm/ViewportCamera"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2392092, -0.17965454, -0.39784893)
+
+[node name="InteractRay" type="RayCast3D" parent="CameraArm"]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0)
+target_position = Vector3(0, -1.5, 0)
+collision_mask = 20
+
+[node name="GroundShapeCast" type="ShapeCast3D" parent="."]
+shape = SubResource("SphereShape3D_pwlsx")
+target_position = Vector3(0, -0.57, 0)
+
+[node name="InputComponent" type="Node" parent="."]
+script = ExtResource("6_pvmx2")
+
+[node name="InteractionComponent" type="Node" parent="." node_paths=PackedStringArray("interact_ray")]
+script = ExtResource("7_g0ebe")
+interact_ray = NodePath("../CameraArm/InteractRay")
+
+[node name="MovementComponent" type="Node" parent="." node_paths=PackedStringArray("movable", "input_component", "camera_arm", "ground_shape_cast")]
+script = ExtResource("8_pwlsx")
+movable = NodePath("..")
+input_component = NodePath("../InputComponent")
+camera_arm = NodePath("../CameraArm")
+ground_shape_cast = NodePath("../GroundShapeCast")
+
+[node name="FocusComponent" type="Node" parent="."]
+script = ExtResource("9_nempf")
+
+[node name="TakePictureComponent" type="Node" parent="."]
+script = ExtResource("10_64r4e")
+
+[node name="CameraZoomComponent" type="Node" parent="." node_paths=PackedStringArray("zoom_target")]
+script = ExtResource("11_i2wpr")
+zoom_target = NodePath("../CameraArm/ViewportCamera")
+zoom_speed = 8.0
+
+[node name="InventoryComponent" type="Node" parent="." node_paths=PackedStringArray("hold_point", "world_access")]
+script = ExtResource("8_qe8e7")
+hold_point = NodePath("../CameraArm/ViewportCamera/HoldPoint")
+world_access = NodePath("../WorldAccess")
+
+[node name="WorldAccess" type="Node" parent="."]
+script = ExtResource("9_4ahv8")
+metadata/_custom_type_script = "uid://bvuf56ur35av4"
+
+[node name="CanvasLayer" parent="." instance=ExtResource("10_jxu3w")]
+
+[connection signal="_1" from="InputComponent" to="InventoryComponent" method="hold_slot"]
+[connection signal="_2" from="InputComponent" to="InventoryComponent" method="hold_slot"]
+[connection signal="click_l" from="InputComponent" to="TakePictureComponent" method="take_picture"]
+[connection signal="click_r" from="InputComponent" to="CameraZoomComponent" method="zoom"]
+[connection signal="drop" from="InputComponent" to="InventoryComponent" method="drop_item"]
+[connection signal="interact" from="InputComponent" to="InteractionComponent" method="_on_input_component_interact"]
+[connection signal="jump" from="InputComponent" to="MovementComponent" method="jump"]
+[connection signal="mouse_input" from="InputComponent" to="MovementComponent" method="_rotate_camera"]
+[connection signal="capture_mouse" from="FocusComponent" to="InputComponent" method="capture_mouse"]

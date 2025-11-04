@@ -1,4 +1,5 @@
 extends Node
+class_name WorldRegisterComponent
 
 @onready var world: Node3D = get_tree().get_first_node_in_group("World")
 

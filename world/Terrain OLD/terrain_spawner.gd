@@ -83,6 +83,10 @@ func _process(_delta: float) -> void:
 
 			if lod <= 2:
 				var static_body = StaticBody3D.new()
+
+				static_body.collision_layer = 1
+				static_body.collision_mask = 3 and 4
+
 				static_body.add_child(collision)
 				mesh_inst.add_child(static_body)
 

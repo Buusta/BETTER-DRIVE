@@ -5,7 +5,13 @@ signal interact
 signal jump
 signal mouse_input
 signal click_l
-signal zoom
+signal click_r
+signal _1
+signal _2
+signal _3
+signal _4
+signal _5
+signal drop
 
 @onready var parent = get_parent()
 
@@ -16,7 +22,7 @@ var mouse_captured: bool = true
 func _unhandled_input(event: InputEvent) -> void:
 	is_jump = false
 	
-	input_vector = Input.get_vector("move_left", "move_right", "move_back", "move_forward")
+	input_vector = Input.get_vector("move_left", "move_right", "move_backward", "move_forward")
 
 	if event is InputEventMouseMotion:
 		if mouse_captured:
@@ -37,12 +43,29 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("interact"):
 		interact.emit(parent)
 
-	if event.is_action_pressed('camera_zoom'):
-		zoom.emit()
-
-	if event.is_action_pressed('take_picture'):
+	if event.is_action_pressed('click_l'):
 		click_l.emit()
-#
+
+	if event.is_action_pressed('click_r'):
+		click_r.emit()
+
+	if event.is_action_pressed('1'):
+		_1.emit(1)
+
+	if event.is_action_pressed('2'):
+		_2.emit(2)
+
+	if event.is_action_pressed('3'):
+		_3.emit(3)
+
+	if event.is_action_pressed('4'):
+		_4.emit(4)
+
+	if event.is_action_pressed('5'):
+		_5.emit(5)
+
+	if event.is_action_pressed('drop_item'):
+		drop.emit()
 	#if event.is_action_pressed("camera_zoom"):
 		#zoom(true)
 	#if event.is_action_released("camera_zoom"):

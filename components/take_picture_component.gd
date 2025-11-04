@@ -1,4 +1,5 @@
 extends Node
+class_name TakePictureComponent
 
 var camera: RigidBody3D
 

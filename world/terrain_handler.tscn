@@ -1,11 +1,11 @@
 [gd_scene load_steps=11 format=3 uid="uid://dx1jyjrpkq5m2"]
 
 [ext_resource type="Script" uid="uid://0ticgkiahhqp" path="res://world/terrain_handler.gd" id="1_u3eri"]
-[ext_resource type="Script" uid="uid://30s1vbjy0850" path="res://structs/noise_struct.gd" id="2_2fiee"]
-[ext_resource type="Script" uid="uid://brwuw7ml11ami" path="res://structs/terrain_struct.gd" id="2_6xesf"]
-[ext_resource type="Shader" uid="uid://qogiayfdhdbe" path="res://Assets/Ground.tres" id="4_ghw3r"]
-[ext_resource type="Shader" uid="uid://dvlwik8bomsr0" path="res://Assets/Road.tres" id="5_f5lqr"]
-[ext_resource type="Script" uid="uid://dtgd117gdjaa4" path="res://structs/road_struct.gd" id="5_u3eri"]
+[ext_resource type="Script" uid="uid://30s1vbjy0850" path="res://scripts/structs/noise_struct.gd" id="2_2fiee"]
+[ext_resource type="Script" uid="uid://brwuw7ml11ami" path="res://scripts/structs/terrain_struct.gd" id="2_6xesf"]
+[ext_resource type="Shader" uid="uid://qogiayfdhdbe" path="res://assets/materials/Ground.tres" id="4_ghw3r"]
+[ext_resource type="Shader" uid="uid://dvlwik8bomsr0" path="res://assets/materials/Road.tres" id="5_f5lqr"]
+[ext_resource type="Script" uid="uid://dtgd117gdjaa4" path="res://scripts/structs/road_struct.gd" id="5_u3eri"]
 
 [sub_resource type="Resource" id="Resource_ghw3r"]
 script = ExtResource("2_2fiee")
