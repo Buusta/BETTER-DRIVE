@@ -1,37 +1,47 @@
-[gd_scene load_steps=2 format=3 uid="uid://cl32v8luarx6x"]
+[gd_scene load_steps=3 format=3 uid="uid://cl32v8luarx6x"]
 
 [ext_resource type="Script" uid="uid://bu33xam6rwphs" path="res://scenes/ui/ui.gd" id="1_w371h"]
+[ext_resource type="FontFile" uid="uid://dq0407kreoy8b" path="res://assets/fonts/fontv6.png" id="2_f5cxw"]
 
 [node name="UI" type="CanvasLayer"]
 script = ExtResource("1_w371h")
 
 [node name="Frametime" type="Label" parent="."]
+texture_filter = 1
 offset_right = 72.0
 offset_bottom = 23.0
+theme_override_fonts/font = ExtResource("2_f5cxw")
 theme_override_font_sizes/font_size = 18
 
 [node name="Distance Driven" type="Label" parent="."]
+texture_filter = 1
 offset_left = 11.0
 offset_top = 280.0
 offset_right = 171.0
 offset_bottom = 320.00003
+theme_override_fonts/font = ExtResource("2_f5cxw")
 theme_override_font_sizes/font_size = 18
 
 [node name="Altitude" type="Label" parent="."]
+texture_filter = 1
 offset_left = 11.0
 offset_top = 310.0
 offset_right = 171.0
 offset_bottom = 350.0
+theme_override_fonts/font = ExtResource("2_f5cxw")
 theme_override_font_sizes/font_size = 18
 
 [node name="Time" type="Label" parent="."]
+texture_filter = 1
 offset_left = 11.0
 offset_top = 340.0
 offset_right = 171.0
 offset_bottom = 380.0
+theme_override_fonts/font = ExtResource("2_f5cxw")
 theme_override_font_sizes/font_size = 18
 
 [node name="Speed" type="Label" parent="."]
+texture_filter = 1
 anchors_preset = 7
 anchor_left = 0.5
 anchor_top = 1.0
@@ -43,6 +53,7 @@ offset_right = 80.0
 offset_bottom = 2.0014648
 grow_horizontal = 2
 grow_vertical = 0
+theme_override_fonts/font = ExtResource("2_f5cxw")
 theme_override_font_sizes/font_size = 18
 
 [node name="Timer" type="Timer" parent="."]

@@ -1,10 +1,13 @@
 extends Node
 class_name MovementComponent
 
-enum PlayerState {GROUND, AIR, DRIVING}
+enum PlayerState {WALKING, AIR, DRIVING, CROUCHING}
+
+@onready var stand_height = movable_shape.shape.height
 
 @export_category('Components')
 @export var movable: RigidBody3D
+@export var movable_shape: CollisionShape3D
 @export var input_component: Node
 @export var camera_arm: SpringArm3D
 @export var ground_shape_cast: ShapeCast3D
@@ -21,16 +24,24 @@ enum PlayerState {GROUND, AIR, DRIVING}
 @export var jump_velocity: float = 3.2
 @export var jump_velocity_factor: float = 0.4
 
+@export_subgroup('Crouch')
+@export var crouch_speed: float = 4.0
+@export var crouch_height: float = 0.65
+
 @export_category('Controls')
 @export var mouse_sensitivity: float = 0.002
 
 var input_vector: Vector2 = Vector2.ZERO
 var horizontal_vel: Vector3 = Vector3.ZERO
 
-var state : PlayerState = PlayerState.GROUND
+var crouch_alpha := 0.0
+var want_crouch := false
+
+var state : PlayerState = PlayerState.WALKING
 
 func _physics_process(delta: float) -> void:
 	update_state()
+	update_crouch(delta)
 
 	input_vector = input_component.input_vector
 	
@@ -40,7 +51,7 @@ func _physics_process(delta: float) -> void:
 	var wish_dir = get_wish_dir()
 
 	match state:
-		PlayerState.GROUND:
+		PlayerState.WALKING:
 			movable.linear_velocity += ground_accelerate(wish_dir, delta)
 		PlayerState.AIR:
 			movable.linear_velocity += air_accelerate(wish_dir, delta)
@@ -48,7 +59,7 @@ func _physics_process(delta: float) -> void:
 func update_state() -> void:
 	if not state == PlayerState.DRIVING:
 		if ground_shape_cast.is_colliding() and movable.linear_velocity.y < jump_velocity_factor * jump_velocity:
-			state = PlayerState.GROUND
+			state = PlayerState.WALKING
 		else:
 			state = PlayerState.AIR
 
@@ -61,7 +72,7 @@ func _rotate_camera(event_relative: Vector2i):
 			camera_arm.rotation.x = clamp(camera_arm.rotation.x, -PI/2 + 0.01, PI/2- 0.01)
 
 func jump() -> void:
-	if state == PlayerState.GROUND and movable.linear_velocity.y < jump_velocity * jump_velocity_factor:
+	if state == PlayerState.WALKING and movable.linear_velocity.y < jump_velocity * jump_velocity_factor:
 		movable.linear_velocity += Vector3(0.0, jump_velocity, 0.0)
 
 func get_wish_dir() -> Vector3:
@@ -89,3 +100,17 @@ func air_accelerate(wish_dir: Vector3, delta: float) -> Vector3:
 		return air_accel
 	else:
 		return Vector3.ZERO
+
+func update_crouch(delta: float):
+	if want_crouch and (state == PlayerState.WALKING or state == PlayerState.CROUCHING):
+		crouch_alpha += delta * crouch_speed
+	else:
+		crouch_alpha -= delta * crouch_speed
+
+	crouch_alpha = clamp(crouch_alpha, 0.0, 1.0)
+	movable_shape.shape.height = stand_height - (stand_height - crouch_height) * crouch_alpha
+
+	want_crouch = false
+
+func crouch():
+	want_crouch = true

@@ -9,8 +9,23 @@ var slots: Array[Node3D]
 var held_slot: int = -1
 
 func _try_add_item(item: Node3D, _inventory_item: InventoryItemStruct):
-	if len(slots) < number_slots and not slots.has(item):
-		slots.append(item)
+	var null_slot = -1
+	if not slots.has(item):
+		for slot in  range(len(slots)):
+			if slots[slot] == null:
+				null_slot = slot
+				continue
+
+		if held_slot == -1:
+			held_slot = slots.find(item)
+		else:
+			item.visible = false
+		
+	if len(slots) < number_slots:
+		if not null_slot == -1:
+			slots[null_slot] = item
+		else:
+			slots.append(item)
 
 		item.get_parent().remove_child(item)
 		hold_point.add_child(item)
@@ -25,7 +40,6 @@ func _try_add_item(item: Node3D, _inventory_item: InventoryItemStruct):
 			item.visible = false
 
 func hold_slot(slot: int):
-	print(slot)
 	if slot <= len(slots):
 		if not slots[slot - 1] == null:
 			var item = slots[slot - 1]
@@ -34,7 +48,6 @@ func hold_slot(slot: int):
 				held_slot = -1
 				return
 			elif not held_slot == -1:
-				print(held_slot)
 				slots[held_slot].visible = false
 
 			item.visible = true

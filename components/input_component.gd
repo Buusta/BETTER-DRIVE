@@ -11,7 +11,8 @@ signal _2
 signal _3
 signal _4
 signal _5
-signal drop
+signal drop_item
+signal crouch
 
 @onready var parent = get_parent()
 
@@ -65,7 +66,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		_5.emit(5)
 
 	if event.is_action_pressed('drop_item'):
-		drop.emit()
+		drop_item.emit()
+
+func _process(_delta: float) -> void:
+	if Input.is_action_pressed('crouch'):
+			crouch.emit()
 	#if event.is_action_pressed("camera_zoom"):
 		#zoom(true)
 	#if event.is_action_released("camera_zoom"):
